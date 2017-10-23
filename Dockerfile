@@ -1,7 +1,7 @@
 FROM cs50/baseimage
 
 # nltk and punkt data
-RUN nltk && python -m nltk.downloader -d /usr/share/nltk_data/ punkt
+RUN pip install nltk && python -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 # clone checks
 RUN git clone -b master https://github.com/cs50/checks.git /home/ubuntu/.local/share/check50/cs50/checks
