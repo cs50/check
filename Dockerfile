@@ -1,4 +1,4 @@
-FROM cs50/common
+FROM cs50/baseimage
 
 # nltk and punkt data
 RUN nltk && python -m nltk.downloader -d /usr/share/nltk_data/ punkt
