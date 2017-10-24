@@ -10,12 +10,12 @@ RUN git clone -b master https://github.com/cs50/checks.git /home/ubuntu/.local/s
 COPY ./check50-wrapper /usr/local/bin/
 RUN chmod a+x /usr/local/bin/check50-wrapper
 
-# configure git
-RUN git config --global user.name bot50 && \
-    git config --global user.email bot@cs50.harvard.edu
-
 # run shell in /root
 RUN useradd --create-home --user-group ubuntu
 WORKDIR /home/ubuntu/check/
 RUN chown -R ubuntu:ubuntu /home/ubuntu/ && chmod -R 755 /home/ubuntu/
 USER ubuntu
+
+# configure git
+RUN git config --global user.name bot50 && \
+    git config --global user.email bot@cs50.harvard.edu
