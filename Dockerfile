@@ -1,7 +1,11 @@
 FROM cs50/baseimage
 
 # nltk and punkt data
-RUN pip install nltk pytz && python -m nltk.downloader -d /usr/share/nltk_data/ punkt
+RUN pip install \
+        nltk \
+        passlib \
+        pytz && \
+    python -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 # check50 wrapper
 COPY ./check50-wrapper /usr/local/bin/
