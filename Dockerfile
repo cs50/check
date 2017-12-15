@@ -1,4 +1,6 @@
-FROM cs50/baseimage
+FROM cs50/baseimage:ubuntu
+
+USER root
 
 # nltk and punkt data
 RUN pip install \
@@ -11,11 +13,10 @@ RUN pip install \
 COPY ./check50-wrapper /usr/local/bin/
 RUN chmod a+x /usr/local/bin/check50-wrapper
 
-# run shell in /root
-RUN useradd --create-home --user-group ubuntu
-WORKDIR /home/ubuntu/check/
-RUN chown -R ubuntu:ubuntu /home/ubuntu/ && chmod -R 755 /home/ubuntu/
 USER ubuntu
+
+RUN mkdir -p /home/ubuntu/check
+WORKDIR /home/ubuntu/check/
 
 # clone checks
 RUN git clone -b master https://github.com/cs50/checks.git /home/ubuntu/.local/share/check50/cs50/checks
