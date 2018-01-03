@@ -1,4 +1,4 @@
-FROM cs50/baseimage:ubuntu
+FROM cs50/baseimage
 
 USER root
 
@@ -15,11 +15,8 @@ RUN chmod a+x /usr/local/bin/check50-wrapper
 
 USER ubuntu
 
-RUN mkdir -p /home/ubuntu/check
-WORKDIR /home/ubuntu/check/
-
 # clone checks
-RUN git clone -b master https://github.com/cs50/checks.git /home/ubuntu/.local/share/check50/cs50/checks
+RUN git clone -b master https://github.com/cs50/checks.git ~/.local/share/check50/cs50/checks/
 
 # configure git
 RUN git config --global user.name bot50 && \
