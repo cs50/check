@@ -2,8 +2,9 @@ FROM cs50/baseimage
 
 USER root
 
-# nltk and punkt data
+# install Python packages
 RUN pip install \
+        flask_sqlalchemy \
         nltk \
         passlib \
         pytz && \
