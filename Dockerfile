@@ -3,12 +3,12 @@ FROM cs50/baseimage
 USER root
 
 # install Python packages
-RUN pip install \
+RUN pip3 install \
         flask_sqlalchemy \
         nltk \
         passlib \
         pytz && \
-    python -m nltk.downloader -d /usr/share/nltk_data/ punkt
+    python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 # check50 wrapper
 COPY ./check50-wrapper /usr/local/bin/
