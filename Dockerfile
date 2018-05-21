@@ -1,4 +1,4 @@
-FROM cs50/baseimage
+FROM cs50/baseimage:bionic
 
 USER root
 
