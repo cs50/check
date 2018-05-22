@@ -1,5 +1,5 @@
 # clone repo
-git clone -b $CHECK50_BRANCH https://$CHECK50_TOKEN:x-oauth-basic@github.com/$CHECK50_OWNER/$CHECK50_REPO.git
+git clone --branch $CHECK50_BRANCH --single-branch https://$CHECK50_TOKEN:x-oauth-basic@github.com/$CHECK50_OWNER/$CHECK50_REPO.git
 
 # checkout commit to be tested
 cd $CHECK50_REPO
@@ -15,7 +15,7 @@ tag_sha=$(git commit-tree HEAD^{tree} -m "$tag_name")
 git push origin $tag_sha:refs/tags/$tag_name
 
 # get style50 results
-style50_results=$(unset CHECK50_TOKEN CHECK50_ID; style50 --output=score .)
+style50_results=$(unset CHECK50_TOKEN CHECK50_ID; style50 --ignore "*.git*" --output=score .)
 if [ $? -ne 0 ]; then
     style50_results=0.0
 fi
