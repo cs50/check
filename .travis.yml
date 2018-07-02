@@ -5,6 +5,8 @@ before_deploy: docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 deploy:
   provider: script
   script: docker push cs50/ecs
+  on:
+    branch: deprecated
 notifications:
   slack:
     secure: UrH4tFdN4YQezSuUB9a8DnqTSWt/tY7gDXfOLPIM0weghSFbcsGNrCOGtO6gBipssEhaK+F9PZ6OQ7bGQtTIWrbhRQmI009WMRkRFz68gd9bVX/b2kdtn+rr3tefOuyORsG/cm5w2uMZl9DLlzV7I/Xg/yLYrteib6qiaJwmGQ2ohgK+2XoFROtPmdBRuIud2P8DVn4ICDGMrx05WmWyqXLe64VjARC1fHdeA3HM5F80iGnpN9skvRkQ3thByy8OAjNGNus4csQl/N90YgJqurkiTNTMex1M6cdtoIvX7K3tOwu2PpfASjbrQOayJV4hcbwZ5ohinHZQPhhvQAax9MN8h8qcIdk1gnFSia+V51MWN/o7bXPXS6PuSDNpHtWMYo9CDTgWITkG+eeOLaeVFVXtuYshXaHsiGeoHwjO+ukeFWI4ZNXA/fhhFsKIJCO6wyzj6+n7DIIHMUOJZUncDYszFIXO09Mfwzm9LeOtNiJ/kOoYtRDo7nBmBE8U/V3Vq87jHprjJVlmesj44n5QLuXd3WwZqJ1sdfseL+xCastIl6Ljxv/QXBnPPr26HepjumVbj4QjRwQ5mnEiU4N1dsler5LTwMlkL9HlMrFLPYfqSF5tzfExj8HgrkTprdPqolPEvDe6jrA0VlSwOBrumACGFKFtoYuaP/mJSVf6G4g=
