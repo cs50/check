@@ -5,6 +5,27 @@ git clone --branch $CHECK50_BRANCH --single-branch https://$CHECK50_TOKEN:x-oaut
 cd $CHECK50_REPO
 git checkout $CHECK50_SHA
 
+case "$CHECK50_BRANCH" in
+    cs50/2018/fall/challenges/site)
+        # create site50 repo if doesn't exist
+        site_repo="`echo $CHECK50_REPO | awk '{print tolower($0)}'`"
+        payload="{ \
+            \"auto_init\": true, \
+            \"has_issues\": false, \
+            \"has_projects\": false, \
+            \"has_wiki\": false, \
+            \"name\": \"$site_repo\", \
+            \"private\": true \
+        }"
+
+        curl --request POST --user "bot50:$CHECK50_TOKEN" --data "$payload" https://api.github.com/user/repos
+
+        # force-push current branch to gh-pages in site repo
+        git push --force https://bot50:$CHEKC50_TOKEN@github.com/sites50/$site_repo "$CHECK50_BRANCH":gh-pages
+        exit 0;
+        ;;
+esac
+
 # form tag name
 tag_name="$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%SZ')"
 
