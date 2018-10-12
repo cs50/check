@@ -42,7 +42,7 @@ case "$CHECK50_BRANCH" in
             \"repo\": \"$CHECK50_REPO\", \
             \"branch\": \"$CHECK50_BRANCH\", \
             \"sha\": \"$CHECK50_SHA\", \
-            \"style\": [], \
+            \"style\": 0.0, \
             \"checks\": ${check50_results/USERNAME/$SITE_REPO}, \
             \"tag_sha\": \"$tag_sha\", \
             \"tag_name\": \"$tag_name\" \
