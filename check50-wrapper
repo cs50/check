@@ -28,12 +28,12 @@ case "$CHECK50_BRANCH" in
 
         curl --verbose --request POST --user "bot50:$CHECK50_TOKEN" --data "$PAYLOAD" https://api.github.com/orgs/sites50/repos
 
+        # set CNAME
+        echo "$SITE_REPO.cs50.site" > CNAME
+        git commit -am 'set CNAME'
+
         # force-push current branch to gh-pages in site repo
         git push --force "https://bot50:$CHECK50_TOKEN@github.com/sites50/$SITE_REPO" "$CHECK50_SHA":refs/heads/gh-pages
-
-        # set CNAME
-        sleep 3
-        curl --verbose --request PUT --user "bot50:$CHECK50_TOKEN" --header "Accept: application/vnd.github.mister-fantastic-preview+json" --data "{\"cname\": \"$SITE_REPO.cs50.site\"}" "https://api.github.com/repos/sites50/$SITE_REPO/pages"
 
         # dummy check50 to give back results to CS50.me
         check50_results=$(unset CHECK50_TOKEN CHECK50_ID; check50 --local --debug $CHECK50_BRANCH)
