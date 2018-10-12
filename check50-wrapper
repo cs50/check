@@ -14,8 +14,7 @@ case "$CHECK50_BRANCH" in
             \"has_issues\": false, \
             \"has_projects\": false, \
             \"has_wiki\": false, \
-            \"name\": \"$SITE_REPO\", \
-            \"private\": true \
+            \"name\": \"$SITE_REPO\" \
         }"
 
         curl --verbose --request POST --user "bot50:$CHECK50_TOKEN" --data "$PAYLOAD" https://api.github.com/orgs/sites50/repos
