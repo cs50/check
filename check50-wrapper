@@ -19,7 +19,7 @@ case "$CHECK50_BRANCH" in
             \"private\": true \
         }"
 
-        curl --verbose --request POST --user "bot50:$CHECK50_TOKEN" --data "$PAYLOAD" https://api.github.com/user/repos
+        curl --verbose --request POST --user "bot50:$CHECK50_TOKEN" --data "$PAYLOAD" https://api.github.com/orgs/sites50/repos
 
         # force-push current branch to gh-pages in site repo
         git push --force "https://bot50:$CHEKC50_TOKEN@github.com/sites50/$SITE_REPO" "$CHECK50_SHA":gh-pages
