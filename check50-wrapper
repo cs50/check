@@ -9,7 +9,7 @@ case "$CHECK50_BRANCH" in
     cs50/2018/fall/challenges/site)
 
         # create site50 repo if doesn't exist
-        SITE_REPO="`echo $CHECK50_REPO | awk '{print tolower($0)}'`"
+        SITE_REPO="$(echo $CHECK50_REPO | awk '{print tolower($0)}')"
         PAYLOAD="{ \
             \"auto_init\": true, \
             \"has_issues\": false, \
