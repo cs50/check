@@ -7,21 +7,29 @@ git checkout $CHECK50_SHA
 
 case "$CHECK50_BRANCH" in
     cs50/2018/fall/challenges/site)
+
         # create site50 repo if doesn't exist
-        site_repo="`echo $CHECK50_REPO | awk '{print tolower($0)}'`"
-        payload="{ \
+        SITE_REPO="`echo $CHECK50_REPO | awk '{print tolower($0)}'`"
+        PAYLOAD="{ \
             \"auto_init\": true, \
             \"has_issues\": false, \
             \"has_projects\": false, \
             \"has_wiki\": false, \
-            \"name\": \"$site_repo\", \
+            \"name\": \"$SITE_REPO\", \
             \"private\": true \
         }"
 
-        curl --request POST --user "bot50:$CHECK50_TOKEN" --data "$payload" https://api.github.com/user/repos
+        curl --verbose --request POST --user "bot50:$CHECK50_TOKEN" --data "$PAYLOAD" https://api.github.com/user/repos
 
         # force-push current branch to gh-pages in site repo
-        git push --force https://bot50:$CHEKC50_TOKEN@github.com/sites50/$site_repo "$CHECK50_BRANCH":gh-pages
+        git push --force "https://bot50:$CHEKC50_TOKEN@github.com/sites50/$SITE_REPO" "$CHECK50_SHA":gh-pages
+
+        # set CNAME
+        curl --verbose --request PUT --user "bot50:$CHECK50_TOKEN" --data "{\"cname\", \"$SITE_REPO\"}" "https://api.github.com/repos/sites50/$SITE_REPO/pages"
+
+        # dummy check50 to give back results to CS50.me
+        check50_results=$(unset CHECK50_TOKEN CHECK50_ID; check50 --local --debug $CHECK50_BRANCH)
+        curl --verbose --header "Content-Type: application/json" --data "${check50_results/USERNAME/$SITE_REPO}" https://cs50.me/hooks/ecs
         exit 0;
         ;;
 esac
@@ -47,7 +55,7 @@ if [ $? -ne 0 ]; then
     check50_results=[]
 fi
 
-payload="{ \
+PAYLOAD="{ \
     \"id\": \"$CHECK50_ID\", \
     \"owner\": \"$CHECK50_OWNER\", \
     \"repo\": \"$CHECK50_REPO\", \
@@ -60,4 +68,4 @@ payload="{ \
 }"
 
 # send notification
-echo "$payload" | curl --header "Content-Type: application/json" --data @- --trace-ascii /dev/stdout https://cs50.me/hooks/ecs
+echo "$PAYLOAD" | curl --header "Content-Type: application/json" --data @- --trace-ascii /dev/stdout https://cs50.me/hooks/ecs
