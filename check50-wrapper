@@ -23,7 +23,7 @@ case "$CHECK50_BRANCH" in
         git push --force "https://bot50:$CHECK50_TOKEN@github.com/sites50/$SITE_REPO" "$CHECK50_SHA":refs/heads/gh-pages
 
         # set CNAME
-        curl --verbose --request PUT --user "bot50:$CHECK50_TOKEN" --header "Accept: application/vnd.github.mister-fantastic-preview+json" --data "{\"cname\": \"$SITE_REPO\"}" "https://api.github.com/repos/sites50/$SITE_REPO/pages"
+        curl --verbose --request PUT --user "bot50:$CHECK50_TOKEN" --header "Accept: application/vnd.github.mister-fantastic-preview+json" --data "{\"cname\": \"$SITE_REPO.cs50.site\"}" "https://api.github.com/repos/sites50/$SITE_REPO/pages"
 
         # dummy check50 to give back results to CS50.me
         check50_results=$(unset CHECK50_TOKEN CHECK50_ID; check50 --local --debug $CHECK50_BRANCH)
