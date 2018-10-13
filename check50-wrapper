@@ -30,7 +30,8 @@ case "$CHECK50_BRANCH" in
 
         # set CNAME
         echo "$SITE_REPO.cs50.site" > CNAME
-        git commit -am 'set CNAME'
+        git add CNAME
+        git commit -m 'set CNAME'
 
         # force-push current branch to gh-pages in site repo
         git push --force "https://bot50:$CHECK50_TOKEN@github.com/sites50/$SITE_REPO" "$CHECK50_SHA":refs/heads/gh-pages
