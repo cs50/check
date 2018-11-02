@@ -7,6 +7,9 @@ ARG DEBIANFRONTEND=noninteractive
 # Install apt packages
 RUN apt-get install -y openjdk-11-jdk-headless
 
+# TODO remove after fixing check50 issue
+RUN pip3 install pip==9
+
 # Install Python packages
 RUN pip3 install \
         flask_sqlalchemy \
