@@ -15,7 +15,7 @@ tag_sha=$(git commit-tree HEAD^{tree} -m "$tag_name")
 git push origin $tag_sha:refs/tags/$tag_name
 
 case "$CHECK50_BRANCH" in
-    cs50/2018/fall/challenges/site)
+    cs50/2019/x/challenges/site)
 
         # create site50 repo if doesn't exist
         SITE_REPO="$(echo $CHECK50_REPO | awk '{print tolower($0)}')"
