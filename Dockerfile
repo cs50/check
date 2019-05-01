@@ -11,11 +11,13 @@ RUN apt-get install --allow-downgrades -y libcs50=8.1.2
 RUN pip3 install pip==9
 
 # Install Python packages
+# TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
 RUN pip3 install \
         flask_sqlalchemy \
         nltk \
         passlib \
-        pytz && \
+        pytz \
+        'werkzeug<0.15' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 # check50 wrapper
