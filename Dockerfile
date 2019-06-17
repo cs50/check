@@ -16,6 +16,7 @@ RUN pip3 install \
         flask_sqlalchemy \
         nltk \
         passlib \
+        plotly \
         pytz \
         'werkzeug<0.15' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
