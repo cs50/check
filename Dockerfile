@@ -4,9 +4,6 @@ USER root
 
 ARG DEBIANFRONTEND=noninteractive
 
-# Install apt packages
-RUN apt-get install --allow-downgrades -y libcs50=8.1.2
-
 # TODO remove after fixing check50 issue
 RUN pip3 install pip==9
 
