@@ -4,9 +4,6 @@ USER root
 
 ARG DEBIANFRONTEND=noninteractive
 
-# TODO remove after fixing check50 issue
-RUN pip3 install pip==9
-
 # Install Python packages
 # TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
 RUN pip3 install \
@@ -18,14 +15,16 @@ RUN pip3 install \
         'werkzeug<0.15' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
+RUN pip3 install --upgrade git+git://github.com/cs50/style50@develop
+
 # check50 wrapper
-COPY ./check50-wrapper /usr/local/bin/
-RUN chmod a+x /usr/local/bin/check50-wrapper
+COPY ./docker-entry /usr/local/bin/
+RUN chmod a+x /usr/local/bin/docker-entry
 
 USER ubuntu
 
 # Clone checks
-RUN git clone -b master https://github.com/cs50/checks.git ~/.local/share/check50/cs50/checks/
+RUN git clone -b 2019/x https://github.com/cs50/problems.git ~/.local/share/check50/cs50/problems/
 
 # Configure git
 RUN git config --global user.name bot50 && \

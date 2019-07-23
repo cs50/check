@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -e
+
+# Clone repo
+echo "Cloning $CHECK50_ORG/$CHECK50_REPO@$CHECK50_BRANCH ..."
+git clone --branch $CHECK50_BRANCH --single-branch https://$CHECK50_TOKEN:x-oauth-basic@github.com/$CHECK50_ORG/$CHECK50_REPO.git
+
+# Checkout commit to be tested
+echo "Chanding directory to $CHECK50_REPO ..."
+cd $CHECK50_REPO
+
+echo "Checking out $CHECK50_COMMIT ..."
+git checkout $CHECK50_COMMIT
+
+# Construct tag name
+echo "Constructing tag name ..."
+TAG_NAME="$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%SZ')"
+echo "Tag name is $TAG_NAME ..."
+
+# Squash commit
+echo "Squashing commit ..."
+TAG_HASH=$(git commit-tree HEAD^{tree} -m "$TAG_NAME")
+echo "Tag hash is $TAG_HASH"
+
+# Push tag
+echo "Pushing tag $TAG_NAME ($TAG_HASH) ..."
+git push origin $TAG_HASH:refs/tags/$TAG_NAME
+
+# Remove credentials
+echo "Removing credentials ..."
+git remote remove origin 
+unset CHECK50_TOKEN
+
+# Get style50 result
+STYLE50_RESULT=""
+if [ "$CHECK50_STYLE" == "1" } ]; then
+    echo "Running style50 ..."
+    STYLE50_RESULT=$(style50 --ignore "./.*" --output=json .)
+    if [ $? -ne 0 ]; then
+        STYLE50_RESULT=""
+    fi
+
+    echo "style50 result is $STYLE50_RESULT"
+else
+    echo "Skipping style50 ..."
+fi
+
+# Get check50 result
+CHECK50_OUT=$(mktemp)
+echo "{}" > $CHECK50_OUT
+echo "Running check50 ..."
+check50 --local --output=json --output-file="$CHECK50_OUT" || true
+CHECK50_RESULT=$(cat $CHECK50_OUT)
+echo "check50 result is $CHECK50_RESULT"
+
+# Construct payload
+PAYLOAD="{ \
+    \"dispatched_at\": \"$CHECK50_TIMESTAMP\", \
+    \"org\": \"$CHECK50_ORG\", \
+    \"repo\": \"$CHECK50_REPO\", \
+    \"slug\": \"$CHECK50_BRANCH\", \
+    \"commit_hash\": \"$CHECK50_COMMIT\", \
+    \"style50\": $STYLE50_RESULT, \
+    \"check50\": $CHECK50_RESULT, \
+    \"tag_hash\": \"$TAG_HASH\"
+}"
+
+echo "Payload is $PAYLOAD"
+
+# Send payload to callback URL
+echo "Sending payload to $CHECK50_CALLBACK_URL ..."
+echo "$PAYLOAD" | curl --header "Content-Type: application/json" --data @- "$CHECK50_CALLBACK_URL"
