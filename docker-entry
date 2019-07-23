@@ -3,54 +3,57 @@
 set -e
 
 # Clone repo
-echo "Cloning $CHECK50_ORG/$CHECK50_REPO@$CHECK50_BRANCH ..."
+echo "Cloning $CHECK50_ORG/$CHECK50_REPO@$CHECK50_BRANCH..."
 git clone --branch $CHECK50_BRANCH --single-branch https://$CHECK50_TOKEN:x-oauth-basic@github.com/$CHECK50_ORG/$CHECK50_REPO.git
 
 # Checkout commit to be tested
-echo "Chanding directory to $CHECK50_REPO ..."
+echo "Chanding directory to $CHECK50_REPO..."
 cd $CHECK50_REPO
 
-echo "Checking out $CHECK50_COMMIT ..."
+echo "Checking out $CHECK50_COMMIT..."
 git checkout $CHECK50_COMMIT
 
 # Construct tag name
-echo "Constructing tag name ..."
+echo "Constructing tag name..."
 TAG_NAME="$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%SZ')"
-echo "Tag name is $TAG_NAME ..."
+echo "Tag name is $TAG_NAME..."
 
 # Squash commit
-echo "Squashing commit ..."
+echo "Squashing commit..."
 TAG_HASH=$(git commit-tree HEAD^{tree} -m "$TAG_NAME")
 echo "Tag hash is $TAG_HASH"
 
 # Push tag
-echo "Pushing tag $TAG_NAME ($TAG_HASH) ..."
+echo "Pushing tag $TAG_NAME ($TAG_HASH)..."
 git push origin $TAG_HASH:refs/tags/$TAG_NAME
 
-# Remove credentials
-echo "Removing credentials ..."
+# Remove remote origin
+echo "Removing remote origin..."
 git remote remove origin 
-unset CHECK50_TOKEN
+
+function sandbox() {
+    CHECK50_PRIVATE_KEY= CHECK50_TOKEN= $@
+}
 
 # Get style50 result
 STYLE50_RESULT=""
 if [ "$CHECK50_STYLE" == "1" ]; then
-    echo "Running style50 ..."
-    STYLE50_RESULT=$(style50 --ignore "./.*" --output=json .)
+    echo "Running style50..."
+    STYLE50_RESULT=$(sandbox style50 --ignore '*/.*' --output=json .)
     if [ $? -ne 0 ]; then
         STYLE50_RESULT=""
     fi
 
     echo "style50 result is $STYLE50_RESULT"
 else
-    echo "Skipping style50 ..."
+    echo "Skipping style50..."
 fi
 
 # Get check50 result
 CHECK50_OUT=$(mktemp)
 echo "{}" > $CHECK50_OUT
-echo "Running check50 ..."
-check50 --local --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
+echo "Running check50..."
+sandbox check50 --local --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
 CHECK50_RESULT=$(cat $CHECK50_OUT)
 echo "check50 result is $CHECK50_RESULT"
 
@@ -68,6 +71,9 @@ PAYLOAD="{ \
 
 echo "Payload is $PAYLOAD"
 
+echo "Signing payload..."
+SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign <(echo -e "$CHECK50_PRIVATE_KEY") <(echo "$PAYLOAD") | openssl base64 -A)"
+
 # Send payload to callback URL
-echo "Sending payload to $CHECK50_CALLBACK_URL ..."
-echo "$PAYLOAD" | curl --header "Content-Type: application/json" --data @- "$CHECK50_CALLBACK_URL"
+echo "Sending payload to $CHECK50_CALLBACK_URL..."
+echo "$PAYLOAD" | curl --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
