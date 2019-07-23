@@ -15,7 +15,7 @@ RUN pip3 install \
         'werkzeug<0.15' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
-RUN pip3 install --upgrade git+git://github.com/cs50/style50@develop
+RUN pip3 install --upgrade git+git://github.com/cs50/check50@develop git+git://github.com/cs50/style50@develop
 
 # check50 wrapper
 COPY ./docker-entry /usr/local/bin/
@@ -29,3 +29,5 @@ RUN git clone -b 2019/x https://github.com/cs50/problems.git ~/.local/share/chec
 # Configure git
 RUN git config --global user.name bot50 && \
     git config --global user.email bot@cs50.harvard.edu
+
+CMD [ "/usr/local/bin/docker-entry" ]

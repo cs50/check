@@ -34,7 +34,7 @@ unset CHECK50_TOKEN
 
 # Get style50 result
 STYLE50_RESULT=""
-if [ "$CHECK50_STYLE" == "1" } ]; then
+if [ "$CHECK50_STYLE" == "1" ]; then
     echo "Running style50 ..."
     STYLE50_RESULT=$(style50 --ignore "./.*" --output=json .)
     if [ $? -ne 0 ]; then
@@ -50,7 +50,7 @@ fi
 CHECK50_OUT=$(mktemp)
 echo "{}" > $CHECK50_OUT
 echo "Running check50 ..."
-check50 --local --output=json --output-file="$CHECK50_OUT" || true
+check50 --local --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
 CHECK50_RESULT=$(cat $CHECK50_OUT)
 echo "check50 result is $CHECK50_RESULT"
 
