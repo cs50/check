@@ -76,4 +76,4 @@ SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_s
 
 # Send payload to callback URL
 echo "Sending payload to $CHECK50_CALLBACK_URL..."
-echo "$PAYLOAD" | curl --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
+echo "$PAYLOAD" | curl --fail --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
