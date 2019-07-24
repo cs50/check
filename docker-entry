@@ -58,7 +58,7 @@ CHECK50_RESULT=$(cat $CHECK50_OUT)
 echo "check50 result is $CHECK50_RESULT"
 
 # Construct payload
-PAYLOAD="{ \
+PAYLOAD="$(jq -c . <<<"{ \
     \"dispatched_at\": \"$CHECK50_TIMESTAMP\", \
     \"org\": \"$CHECK50_ORG\", \
     \"repo\": \"$CHECK50_REPO\", \
@@ -67,13 +67,13 @@ PAYLOAD="{ \
     \"style50\": $STYLE50_RESULT, \
     \"check50\": $CHECK50_RESULT, \
     \"tag_hash\": \"$TAG_HASH\"
-}"
+}")"
 
 echo "Payload is $PAYLOAD"
 
 echo "Signing payload..."
-SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign <(echo -e "$CHECK50_PRIVATE_KEY") <(echo "$PAYLOAD") | openssl base64 -A)"
+SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign <(echo -e "$CHECK50_PRIVATE_KEY") <(echo -n "$PAYLOAD") | openssl base64 -A)"
 
 # Send payload to callback URL
 echo "Sending payload to $CHECK50_CALLBACK_URL..."
-echo "$PAYLOAD" | curl --fail --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
+echo -n "$PAYLOAD" | curl --fail --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
