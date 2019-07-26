@@ -39,7 +39,7 @@ function sandbox() {
 STYLE50_RESULT=""
 if [ "$CHECK50_STYLE" == "1" ]; then
     echo "Running style50..."
-    STYLE50_RESULT=$(sandbox style50 --ignore '*/.*' --output=json .)
+    STYLE50_RESULT=$(sandbox style50 --verbose --ignore '*/.*' --output=json .)
     if [ $? -ne 0 ]; then
         STYLE50_RESULT=""
     fi
@@ -53,7 +53,7 @@ fi
 CHECK50_OUT=$(mktemp)
 echo "{}" > $CHECK50_OUT
 echo "Running check50..."
-sandbox check50 --local --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
+sandbox check50 --local --verbose --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
 CHECK50_RESULT=$(cat $CHECK50_OUT)
 echo "check50 result is $CHECK50_RESULT"
 
