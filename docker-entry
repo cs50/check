@@ -59,7 +59,7 @@ echo "check50 result is $CHECK50_RESULT"
 
 # Construct payload
 PAYLOAD="$(jq -c . <<<"{ \
-    \"dispatched_at\": \"$CHECK50_TIMESTAMP\", \
+    \"id\": \"$CHECK50_ID\", \
     \"org\": \"$CHECK50_ORG\", \
     \"repo\": \"$CHECK50_REPO\", \
     \"slug\": \"$CHECK50_BRANCH\", \
