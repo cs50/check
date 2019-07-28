@@ -41,7 +41,7 @@ if [ "$CHECK50_STYLE" == "1" ]; then
     echo "Running style50..."
     STYLE50_RESULT=$(sandbox style50 --verbose --ignore '*/.*' --output=json .)
     if [ $? -ne 0 ]; then
-        STYLE50_RESULT=""
+        STYLE50_RESULT="null"
     fi
 
     echo "style50 result is $STYLE50_RESULT"
@@ -51,7 +51,7 @@ fi
 
 # Get check50 result
 CHECK50_OUT=$(mktemp)
-echo "{}" > $CHECK50_OUT
+echo "null" > $CHECK50_OUT
 
 if [ -n "$CHECK50_SLUG" ]; then
     echo "Running check50..."
