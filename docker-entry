@@ -29,7 +29,7 @@ git push origin $TAG_HASH:refs/tags/$TAG_NAME
 
 # Remove remote origin
 echo "Removing remote origin..."
-git remote remove origin 
+git remote remove origin
 
 function sandbox() {
     CHECK50_PRIVATE_KEY= CHECK50_TOKEN= $@
@@ -46,14 +46,20 @@ if [ "$CHECK50_STYLE" == "1" ]; then
 
     echo "style50 result is $STYLE50_RESULT"
 else
-    echo "Skipping style50..."
+    echo "CHECK50_STYLE is $CHECK50_STYLE. Skipping style50..."
 fi
 
 # Get check50 result
 CHECK50_OUT=$(mktemp)
 echo "{}" > $CHECK50_OUT
-echo "Running check50..."
-sandbox check50 --local --verbose --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
+
+if [ -n "$CHECK50_SLUG" ]; then
+    echo "Running check50..."
+    sandbox check50 --local --verbose --output=json --output-file="$CHECK50_OUT" "$CHECK50_SLUG" || true
+else
+    echo "CHECK50_SLUG is $CHECK50_SLUG. Skipping check50..."
+fi
+
 CHECK50_RESULT=$(cat $CHECK50_OUT)
 echo "check50 result is $CHECK50_RESULT"
 
