@@ -17,9 +17,6 @@ RUN pip3 install \
         werkzeug && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
-RUN pip3 install --upgrade git+git://github.com/cs50/check50@develop git+git://github.com/cs50/style50@develop
-
-# check50 wrapper
 COPY ./docker-entry /usr/local/bin/
 RUN chmod a+x /usr/local/bin/docker-entry
 
