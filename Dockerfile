@@ -14,7 +14,7 @@ RUN pip3 install \
         passlib \
         plotly \
         pytz \
-        'werkzeug<0.15' && \
+        werkzeug && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 RUN pip3 install --upgrade git+git://github.com/cs50/check50@develop git+git://github.com/cs50/style50@develop
@@ -31,5 +31,7 @@ RUN git clone -b 2019/x https://github.com/cs50/problems.git ~/.local/share/chec
 # Configure git
 RUN git config --global user.name bot50 && \
     git config --global user.email bot@cs50.harvard.edu
+
+ENV CHECK50_WORKERS "4"
 
 CMD [ "/usr/local/bin/docker-entry" ]
