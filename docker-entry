@@ -73,7 +73,8 @@ PAYLOAD="{ \
     \"commit_hash\": \"$CHECK50_COMMIT\", \
     \"style50\": $STYLE50_RESULT, \
     \"check50\": $CHECK50_RESULT, \
-    \"tag_hash\": \"$TAG_HASH\"
+    \"tag_hash\": \"$TAG_HASH\", \
+    \"pushed_at\": \"$CHECK50_PUSHED_AT\"
 }"
 
 echo "Payload is $PAYLOAD"

@@ -14,6 +14,7 @@ RUN pip3 install \
         passlib \
         plotly \
         pytz \
+        cffi \
         werkzeug && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
