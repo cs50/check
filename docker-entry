@@ -13,9 +13,9 @@ cd $CHECK50_REPO
 echo "Checking out $CHECK50_COMMIT..."
 git checkout $CHECK50_COMMIT
 
-# Construct tag name
+# Construct tag name (note assumes system timezone is utc)
 echo "Constructing tag name..."
-TAG_NAME="$CHECK50_REPO:$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%S.%N%:z')"
+TAG_NAME="$CHECK50_REPO-$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%S.%NZ')"
 echo "Tag name is $TAG_NAME..."
 
 # Squash commit
