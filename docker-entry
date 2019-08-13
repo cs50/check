@@ -15,7 +15,7 @@ git checkout $CHECK50_COMMIT
 
 # Construct tag name
 echo "Constructing tag name..."
-TAG_NAME="$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%SZ')"
+TAG_NAME="$CHECK50_REPO:$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%SZ')"
 echo "Tag name is $TAG_NAME..."
 
 # Squash commit
