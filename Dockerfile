@@ -11,6 +11,8 @@ RUN apt-get update -qq && apt-get install -y jq
 RUN pip3 install \
         flask_sqlalchemy \
         nltk \
+        numpy \
+        pandas \
         passlib \
         plotly \
         pytz \
