@@ -26,7 +26,7 @@ RUN chmod a+x /usr/local/bin/docker-entry
 USER ubuntu
 
 # Clone checks
-RUN git clone -b 2019/x https://github.com/cs50/problems.git ~/.local/share/check50/cs50/problems/
+RUN git clone -b 2020/x https://github.com/cs50/problems.git ~/.local/share/check50/cs50/problems/
 
 # Configure git
 RUN git config --global user.name bot50 && \
