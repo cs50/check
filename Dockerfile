@@ -1,4 +1,4 @@
-FROM cs50/baseimage
+FROM cs50/cli
 
 USER root
 
@@ -22,6 +22,8 @@ RUN pip3 install \
 
 COPY ./docker-entry /usr/local/bin/
 RUN chmod a+x /usr/local/bin/docker-entry
+
+RUN sed -i '/^ubuntu ALL=(ALL) NOPASSWD:ALL$/d' /etc/sudoers
 
 USER ubuntu
 
