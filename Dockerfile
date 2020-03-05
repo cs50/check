@@ -20,15 +20,15 @@ RUN pip3 install \
         werkzeug && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
-COPY ./docker-entry /usr/local/bin/
-RUN chmod a+x /usr/local/bin/docker-entry
+COPY ./docker-entry.sh /
+RUN chmod a+x /docker-entry.sh
 
 RUN sed -i '/^ubuntu ALL=(ALL) NOPASSWD:ALL$/d' /etc/sudoers
 
 USER ubuntu
 
 # Clone checks
-RUN git clone -b 2020/x https://github.com/cs50/problems.git ~/.local/share/check50/cs50/problems/
+ENV CHECK50_PATH  "~/.local/share/check50"
 
 # Configure git
 RUN git config --global user.name bot50 && \
@@ -36,4 +36,4 @@ RUN git config --global user.name bot50 && \
 
 ENV CHECK50_WORKERS "4"
 
-CMD [ "/usr/local/bin/docker-entry" ]
+CMD [ "/docker-entry.sh" ]

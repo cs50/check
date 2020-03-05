@@ -55,8 +55,11 @@ CHECK50_OUT=$(mktemp)
 echo -n "null" > $CHECK50_OUT
 
 if [ -n "$CHECK50_SLUG" ]; then
+    echo "Cloning checks at $CHECK50_SLUG..."
+    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$CHECK50_SLUG" "$CHECK50_TOKEN"
+
     echo "Running check50..."
-    sandbox "check50 --local --verbose --output=json --output-file='$CHECK50_OUT' '$CHECK50_SLUG'" || true
+    sandbox "check50 --offline --verbose --output=json --output-file='$CHECK50_OUT' '$CHECK50_SLUG'" || true
 else
     echo "CHECK50_SLUG is $CHECK50_SLUG. Skipping check50..."
 fi
