@@ -17,7 +17,7 @@ RUN pip3 install \
         plotly \
         pytz \
         cffi \
-        werkzeug && \
+        'werkzeug<1.0.0' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
