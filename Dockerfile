@@ -17,7 +17,9 @@ RUN pip3 install \
         plotly \
         pytz \
         cffi \
-        'werkzeug<1.0.0' && \
+        'werkzeug<1.0.0' \
+        'scikit-learn==0.22.1' \
+        'tensorflow==2.1.0' && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
