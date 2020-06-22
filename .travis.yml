@@ -5,6 +5,7 @@ branches:
 script: |
   export TRAVIS_TAG=$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))
   docker build . -t "$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
+  docker run -e CHECK50_TOKEN=$CHECK50_TOKEN -e CHECK50_ORG="me50" -e CHECK50_REPO="cs50student2" -e CHECK50_BRANCH="cs50/problems/2020/x/hello" -e CHECK50_SLUG="cs50/problems/2020/x/hello" -e CHECK50_COMMIT="e03bee664b4c310579025e494eb086b213c01626" -e CHECK50_STYLE=1 -e CHECK50_CALLBACK_URL="http://localhost:8080/validate" "$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
 before_deploy:
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 - docker tag "$TRAVIS_REPO_SLUG:$TRAVIS_TAG" "$TRAVIS_REPO_SLUG:latest"

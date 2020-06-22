@@ -28,6 +28,8 @@ RUN chmod a+x /docker-entry.sh
 
 RUN sed -i '/^ubuntu ALL=(ALL) NOPASSWD:ALL$/d' /etc/sudoers
 
+COPY ./validate /validate
+
 USER ubuntu
 
 # Clone checks
