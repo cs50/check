@@ -5,14 +5,14 @@ set -e
 # Usage instructions
 usage () {
     echo "Usage: $0 OPTION..." 
-    echo "-t, --token             TOKEN           your GitHub access token (ideally, set CHECK50_TOKEN as env var instead)"
+    echo "-t, --token             TOKEN           GitHub access token used for cloning and pushing"
     echo "-o, --organization      ORGANIZATION    organization name"
     echo "-r, --repository        REPOSITORY      repository"
     echo "-b, --branch            BRANCH          branch within the repository"
-    echo "-c, --commit            COMMIT          commit to check out"
-    echo "-s, --style50           STYLE50         whether to use style50"
-    echo "-u, --url               URL             callback URL"
-    echo "-h, --help              HELP            display this help message"
+    echo "-c, --commit            SHA             commit to check out"
+    echo "-s, --style50                           whether to use style50"
+    echo "-cb, --callback-url     URL             callback URL"
+    echo "-h, --help                              display help message"
     exit 1
 }
 
@@ -21,34 +21,33 @@ while [ $# -gt 0 ]; do
     case $1 in
         -t|--token)
             shift
-            CHECK50_TOKEN=$1
+            TOKEN="$1"
             ;;
         -r|--repository)
             shift
-            CHECK50_REPO=$1
+            REPO="$1"
             ;;
         -b|--branch)
             shift
-            CHECK50_BRANCH=$1
-            CHECK50_SLUG=$1
+            BRANCH="$1"
             ;;
         -c|--commit)
             shift
-            CHECK50_COMMIT=$1
+            COMMIT="$1"
             ;;
         -s|--style50)
-            CHECK50_STYLE=1
+            STYLE=1
             ;;
         -o|--organization)
             shift
-            CHECK50_ORG=$1
+            ORG="$1"
             ;;
-        -u|--url)
+        -cb|--callback-url)
             shift
-            CHECK50_CALLBACK_URL=$1
+            CALLBACK_URL="$1"
             ;;
         -h|--help)
-            SHOW_HELP=1
+            usage
             ;;
         *)
             usage
@@ -58,33 +57,20 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# Show usage message if needed
-if [ "$SHOW_HELP" == "1" ]; then
-    usage
-fi
-
-# Handle signature keys
-CHECK50_PRIVATE_KEY=$(mktemp)
-openssl genpkey -out $CHECK50_PRIVATE_KEY -outform PEM --algorithm RSA -pkeyopt rsa_keygen_bits:2048
-export CHECK50_PUBLIC_KEY=$(openssl pkey -pubout -inform PEM -outform PEM -in $CHECK50_PRIVATE_KEY)
-
-# Start Flask mock server in background
-python3 /validate/application.py &
-
 # Clone repo
-echo "Cloning $CHECK50_ORG/$CHECK50_REPO@$CHECK50_BRANCH..."
-git clone --branch $CHECK50_BRANCH --single-branch "https://$CHECK50_TOKEN:x-oauth-basic@github.com/$CHECK50_ORG/$CHECK50_REPO.git"
+echo "Cloning $ORG/$REPO@$BRANCH..."
+git clone --branch $BRANCH --single-branch "https://$TOKEN:x-oauth-basic@github.com/$ORG/$REPO.git"
 
 # Checkout commit to be tested
-echo "Changing directory to $CHECK50_REPO..."
-cd $CHECK50_REPO
+echo "Changing directory to $REPO..."
+cd $REPO
 
-echo "Checking out $CHECK50_COMMIT..."
-git checkout $CHECK50_COMMIT
+echo "Checking out $COMMIT..."
+git checkout $COMMIT
 
 # Construct tag name (note assumes system timezone is utc)
 echo "Constructing tag name..."
-TAG_NAME="$CHECK50_REPO-$CHECK50_BRANCH@$(date '+%Y%m%dT%H%M%S.%NZ')"
+TAG_NAME="$REPO-$BRANCH@$(date '+%Y%m%dT%H%M%S.%NZ')"
 echo "Tag name is $TAG_NAME..."
 
 # Squash commit
@@ -101,13 +87,13 @@ echo "Removing remote origin..."
 git remote remove origin
 
 function sandbox() {
-    eval "CHECK50_PRIVATE_KEY= CHECK50_TOKEN= $@"
+    eval "CHECK50_PRIVATE_KEY= TOKEN= $@"
 }
 
 # Get style50 result
 STYLE50_RESULT_DEFAULT="null"
 STYLE50_RESULT="$STYLE50_RESULT_DEFAULT"
-if [ "$CHECK50_STYLE" == "1" ]; then
+if [ "$STYLE" == "1" ]; then
     echo "Running style50..."
     STYLE50_RESULT=$(sandbox 'style50 --verbose --ignore \*/.\* --output=json $PWD')
     if [ $? -ne 0 ]; then
@@ -116,21 +102,21 @@ if [ "$CHECK50_STYLE" == "1" ]; then
 
     echo "style50 result is $STYLE50_RESULT"
 else
-    echo "CHECK50_STYLE is $CHECK50_STYLE. Skipping style50..."
+    echo "STYLE is $STYLE. Skipping style50..."
 fi
 
 # Get check50 result
 CHECK50_OUT=$(mktemp)
 echo -n "null" > $CHECK50_OUT
 
-if [ -n "$CHECK50_SLUG" ]; then
-    echo "Cloning checks at $CHECK50_SLUG..."
-    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$CHECK50_SLUG" "$CHECK50_TOKEN"
+if [ -n "$BRANCH" ]; then
+    echo "Cloning checks at $BRANCH..."
+    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$BRANCH" "$TOKEN"
 
     echo "Running check50..."
-    sandbox "check50 --local --no-download-checks --verbose --output=json --output-file='$CHECK50_OUT' '$CHECK50_SLUG'" || true
+    sandbox "check50 --local --no-download-checks --verbose --output=json --output-file='$CHECK50_OUT' '$BRANCH'" || true
 else
-    echo "CHECK50_SLUG is $CHECK50_SLUG. Skipping check50..."
+    echo "SLUG is $BRANCH. Skipping check50..."
 fi
 
 CHECK50_RESULT=$(cat $CHECK50_OUT)
@@ -139,10 +125,10 @@ echo "check50 result is $CHECK50_RESULT"
 # Construct payload
 PAYLOAD="{ \
     \"id\": \"$CHECK50_ID\", \
-    \"org\": \"$CHECK50_ORG\", \
-    \"repo\": \"$CHECK50_REPO\", \
-    \"slug\": \"$CHECK50_BRANCH\", \
-    \"commit_hash\": \"$CHECK50_COMMIT\", \
+    \"org\": \"$ORG\", \
+    \"repo\": \"$REPO\", \
+    \"slug\": \"$BRANCH\", \
+    \"commit_hash\": \"$COMMIT\", \
     \"style50\": $STYLE50_RESULT, \
     \"check50\": $CHECK50_RESULT, \
     \"tag_hash\": \"$TAG_HASH\", \
@@ -154,21 +140,9 @@ echo "Compacting payload..."
 PAYLOAD="$(jq -c . <<<"$PAYLOAD")"
 echo "Compact payload is $PAYLOAD"
 
-echo "Signing payload using $CHECK50_PRIVATE_KEY..."
-SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign $CHECK50_PRIVATE_KEY <(echo -n "$PAYLOAD") | openssl base64 -A)"
+echo "Signing payload..."
+SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign /keys/private.pem <(echo -n "$PAYLOAD") | openssl base64 -A)"
 
 # Send payload to callback URL
-echo "Sending payload to $CHECK50_CALLBACK_URL..."
-echo -n "$PAYLOAD" | curl --fail --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CHECK50_CALLBACK_URL"
-
-# Save the CURL exit code
-CODE=$?
-
-# Kill and delete Flask server
-fuser -k -TERM -n tcp 8080
-
-# Delete private key temporary file
-rm $CHECK50_PRIVATE_KEY
-
-# Exit with saved code
-exit $CODE
+echo "Sending payload to $CALLBACK_URL..."
+echo -n "$PAYLOAD" | curl --fail --header "Content-Type: application/json" --header "X-Payload-Signature: $SIGNATURE" --data @- "$CALLBACK_URL"

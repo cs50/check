@@ -1,6 +1,5 @@
 import json
 import lib50.crypto
-import os
 
 
 def check_payload(payload, expected_payload):
@@ -22,9 +21,9 @@ def get_payload(org, repo, slug):
 
     # Confirm org, repo, and slug while we're at it
     if org == "me50" and repo == "cs50student2" and slug == "cs50/problems/2020/x/hello":
-        with open("/validate/hello/check.json") as f:
+        with open("hello/check.json") as f:
             check50 = json.load(f)
-        with open("/validate/hello/style.json") as f:
+        with open("hello/style.json") as f:
             style50 = json.load(f)
 
         payload = {
@@ -38,12 +37,13 @@ def get_payload(org, repo, slug):
     return payload
 
 
-def valid_signature(sig, payload, public_key="/validate/public.pem"):
+def valid_signature(sig, payload, public_key="../tests/keys/public.pem"):
     """Determines if a signature is valid"""
 
     # Load the public key
-    key = os.environ["CHECK50_PUBLIC_KEY"]
-    public_key = lib50.crypto.load_public_key(key.encode("utf-8"))
+    with open(public_key, "rb") as f:
+        key = f.read()
+    public_key = lib50.crypto.load_public_key(key)
 
     # Encode as bytes if needed
     if type(payload) != bytes:
