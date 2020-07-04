@@ -56,14 +56,14 @@ done
 
 # Clone repo
 echo "Cloning $ORG/$REPO@$BRANCH..."
-git clone --branch $BRANCH --single-branch "https://$TOKEN:x-oauth-basic@github.com/$ORG/$REPO.git"
+git clone --branch "$BRANCH" --single-branch "https://$TOKEN:x-oauth-basic@github.com/$ORG/$REPO.git"
 
 # Checkout commit to be tested
 echo "Changing directory to $REPO..."
 cd $REPO
 
 echo "Checking out $COMMIT..."
-git checkout $COMMIT
+git checkout "$COMMIT"
 
 # Construct tag name (note assumes system timezone is utc)
 echo "Constructing tag name..."
@@ -72,12 +72,12 @@ echo "Tag name is $TAG_NAME..."
 
 # Squash commit
 echo "Squashing commit..."
-TAG_HASH=$(git commit-tree HEAD^{tree} -m "$TAG_NAME")
+TAG_HASH="$(git commit-tree HEAD^{tree} -m "$TAG_NAME")"
 echo "Tag hash is $TAG_HASH"
 
 # Push tag
 echo "Pushing tag $TAG_NAME ($TAG_HASH)..."
-git push origin $TAG_HASH:refs/tags/$TAG_NAME
+git push origin "$TAG_HASH:refs/tags/$TAG_NAME"
 
 # Remove remote origin
 echo "Removing remote origin..."
@@ -103,8 +103,8 @@ else
 fi
 
 # Get check50 result
-CHECK50_OUT=$(mktemp)
-echo -n "null" > $CHECK50_OUT
+CHECK50_OUT="$(mktemp)"
+echo -n "null" > "$CHECK50_OUT"
 
 if [ -n "$BRANCH" ]; then
     echo "Cloning checks at $BRANCH..."
