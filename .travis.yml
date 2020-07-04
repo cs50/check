@@ -12,9 +12,8 @@ script: |
   set -e
 
   # Generate key pair
-  KEYS_DIR="$(mktemp -d)"
-  openssl genpkey -out "$KEYS_DIR/private.pem" -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:2048
-  openssl pkey -pubout -inform PEM -outform PEM -in "$KEYS_DIR/private.pem" -out "$KEYS_DIR/public.pem"
+  openssl genpkey -out "tests/private.pem" -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:2048
+  openssl pkey -pubout -inform PEM -outform PEM -in "tests/private.pem" -out "tests/public.pem"
 
   # Build image
   export TRAVIS_TAG="$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))"
@@ -23,7 +22,7 @@ script: |
 
   # Run tests
   FLASK_APP=tests/app flask run -h 0.0.0.0 &
-  docker run --network host -e "CHECK50_PRIVATE_KEY=$(< "$KEYS_DIR/private.pem")" "$IMAGE" \
+  docker run --network host -e "CHECK50_PRIVATE_KEY=$(< "test/private.pem")" "$IMAGE" \
     --branch "$CHECK50_BRANCH" \
     --callback-url "http://localhost:5000/validate" \
     --commit "$(jq -r .commit_hash $RESULTS_FILE)" \
