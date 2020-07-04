@@ -3,20 +3,39 @@ services: docker
 branches:
   except: /^\d+$/
 env:
-  CHECK50_ORG="me50" CHECK50_REPO="cs50student2" CHECK50_BRANCH="cs50/problems/2020/x/hello" CHECK50_COMMIT="e03bee664b4c310579025e494eb086b213c01626"
+  CHECK50_ORG="me50" CHECK50_REPO="cs50student2" CHECK50_BRANCH="cs50/problems/2020/x/hello" RESULTS_FILE="tests/results.json"
 language: python
 python: 3.6
-install:
-  - pip install Flask lib50
+install: pip install Flask lib50
 script: |
-  export TRAVIS_TAG=$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))
-  docker build . -t "$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
-  export KEYS_DIR="$PWD/tests/keys/"
-  mkdir -p $KEYS_DIR
-  openssl genpkey -out "$KEYS_DIR"private.pem -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:2048
-  openssl pkey -pubout -inform PEM -outform PEM -in "$KEYS_DIR"private.pem -out "$KEYS_DIR"public.pem
-  cd validate && flask run -h 0.0.0.0 & cd ..
-  docker run --network host -v $KEYS_DIR:/keys/ "$TRAVIS_REPO_SLUG:$TRAVIS_TAG" /docker-entry.sh -t $CHECK50_TOKEN -o $CHECK50_ORG -r $CHECK50_REPO -b $CHECK50_BRANCH -c $CHECK50_COMMIT -cb "http://localhost:5000/validate" -s
+  #!/bin/bash
+
+  set -e
+
+  # Generate key pair
+  KEYS_DIR="$(mktemp -d)"
+  openssl genpkey -out "$KEYS_DIR/private.pem" -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:2048
+  openssl pkey -pubout -inform PEM -outform PEM -in "$KEYS_DIR/private.pem" -out "$KEYS_DIR/public.pem"
+
+  # Build image
+  export TRAVIS_TAG="$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))"
+  IMAGE="$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
+  docker build . -t "$IMAGE"
+
+  # Run tests
+  FLASK_APP=tests/app flask run -h 0.0.0.0 &
+  docker run --network host "$IMAGE" \
+    --branch "$CHECK50_BRANCH" \
+    --callback-url "http://localhost:5000/validate"
+    --commit "$(jq -r .commit_hash $RESULTS_FILE)" \
+    --job-id "$(jq -r .id $RESULTS_FILE)" \
+    --org "$CHECK50_ORG" \
+    --pushed-at "$(jq -r .pushed_at $RESULTS_FILE)" \
+    --repo "$CHECK50_REPO"  \
+    --slug "$CHECK50_BRANCH" \
+    --style50 \
+    --token "$CHECK50_TOKEN"
+
 before_deploy:
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 - docker tag "$TRAVIS_REPO_SLUG:$TRAVIS_TAG" "$TRAVIS_REPO_SLUG:latest"

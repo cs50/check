@@ -1,0 +1,71 @@
+{
+    "id": "5f685770-8711-456b-abe5-a55bb08ad091",
+    "commit_hash": "e03bee664b4c310579025e494eb086b213c01626",
+    "pushed_at": "2020-07-04T08:23:11+00:00",
+    "check50": {
+        "slug": "cs50/problems/2020/x/hello",
+        "results": [
+            {
+                "name": "exists",
+                "description": "hello.c exists",
+                "passed": true,
+                "log": [
+                    "checking that hello.c exists..."
+                ],
+                "cause": null,
+                "data": {},
+                "dependency": null
+            },
+            {
+                "name": "compiles",
+                "description": "hello.c compiles",
+                "passed": false,
+                "log": [
+                    "running clang hello.c -o hello -std=c11 -ggdb -lm -lcs50...",
+                    "/usr/bin/../lib/gcc/x86_64-linux-gnu/7.5.0/../../../x86_64-linux-gnu/crt1.o: In function `_start':",
+                    "(.text+0x20): undefined reference to `main'",
+                    "clang-7: error: linker command failed with exit code 1 (use -v to see invocation)"
+                ],
+                "cause": {
+                    "rationale": "code failed to compile",
+                    "help": null
+                },
+                "data": {},
+                "dependency": "exists"
+            },
+            {
+                "name": "emma",
+                "description": "responds to name Emma",
+                "passed": null,
+                "log": [],
+                "cause": {
+                    "rationale": "can't check until a frown turns upside down"
+                },
+                "data": {},
+                "dependency": "compiles"
+            },
+            {
+                "name": "rodrigo",
+                "description": "responds to name Rodrigo",
+                "passed": null,
+                "log": [],
+                "cause": {
+                    "rationale": "can't check until a frown turns upside down"
+                },
+                "data": {},
+                "dependency": "compiles"
+            }
+        ],
+        "version": "3.1.2"
+    },
+    "style50": {
+        "files": [
+            {
+                "name": "/home/ubuntu/cs50student2/hello.c",
+                "error": "file is empty"
+            }
+        ],
+        "score": 0.0,
+        "version": "2.7.4"
+    }
+}
