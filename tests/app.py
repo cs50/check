@@ -1,21 +1,23 @@
 import json
 import lib50.crypto
+import os
 
 from flask import Flask, request
 
 
 app = Flask(__name__)
+dirname = os.path.dirname(os.path.abspath(__file__))
 
 
 def valid_payload(payload):
     """Gets the expected payload."""
 
     del payload["tag_hash"]
-    with open("results.json") as f:
+    with open(os.path.join(dirname, "results.json")) as f:
         return payload == json.load(f)
 
 
-def valid_signature(payload, signature, public_key=f"tests/public.pem"):
+def valid_signature(payload, signature, public_key=os.path.join(dirname, "public.pem")):
     """Determines if a signature is valid"""
 
     with open(public_key, "rb") as f:
