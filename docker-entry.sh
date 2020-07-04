@@ -12,6 +12,7 @@ usage () {
     echo "--org               ORGANIZATION    organization name"
     echo "--pushed-at         DATETIME        date and time of push"
     echo "--repo              REPOSITORY      repository name"
+    echo "--slug              SLUG            check50 slug"
     echo "--style50                           whether to use style50"
     echo "--token             TOKEN           GitHub access token used for cloning and pushing"
     echo "--help                              display help message"
@@ -57,7 +58,13 @@ while [ $# -gt 0 ]; do
             REPO="$1"
             ;;
 
+        --slug)
+            shift
+            SLUG="$1"
+            ;;
+
         --style50)
+            shift
             STYLE=1
             ;;
 
@@ -126,14 +133,14 @@ fi
 CHECK50_OUT="$(mktemp)"
 echo -n "null" > "$CHECK50_OUT"
 
-if [ -n "$BRANCH" ]; then
-    echo "Cloning checks at $BRANCH..."
-    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$BRANCH" "$TOKEN"
+if [ -n "$SLUG" ]; then
+    echo "Cloning checks at $SLUG..."
+    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$SLUG" "$TOKEN"
 
     echo "Running check50..."
-    sandbox "check50 --local --no-download-checks --verbose --output=json --output-file='$CHECK50_OUT' '$BRANCH'" || true
+    sandbox "check50 --local --no-download-checks --verbose --output=json --output-file='$CHECK50_OUT' '$SLUG'" || true
 else
-    echo "SLUG is $BRANCH. Skipping check50..."
+    echo "slug is empty, skipping check50..."
 fi
 
 CHECK50_RESULT=$(cat $CHECK50_OUT)
