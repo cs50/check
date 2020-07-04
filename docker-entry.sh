@@ -64,7 +64,6 @@ while [ $# -gt 0 ]; do
             ;;
 
         --style50)
-            shift
             STYLE=1
             ;;
 
