@@ -3,7 +3,7 @@ services: docker
 branches:
   except: /^\d+$/
 env:
-  CHECK50_ORG="me50" CHECK50_REPO="cs50student2" CHECK50_BRANCH="cs50/problems/2020/x/hello" RESULTS_FILE="tests/results.json"
+- CHECK50_ORG="me50" CHECK50_REPO="cs50student2" CHECK50_BRANCH="cs50/problems/2020/x/hello" RESULTS_FILE="tests/results.json"
 language: python
 python: 3.6
 install: pip install Flask lib50
