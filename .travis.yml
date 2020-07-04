@@ -46,7 +46,7 @@ deploy:
   on:
     branch: master
 - provider: releases
-  api_key: $GITHUB_TOKEN
+  token: $GITHUB_TOKEN
   skip_cleanup: true
   on:
     branch: master
