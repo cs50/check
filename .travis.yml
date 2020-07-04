@@ -47,7 +47,6 @@ deploy:
     branch: master
 - provider: releases
   token: $GITHUB_TOKEN
-  skip_cleanup: true
   on:
     branch: master
 notifications:
