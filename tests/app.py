@@ -15,7 +15,7 @@ def valid_payload(payload):
         return payload == json.load(f)
 
 
-def valid_signature(payload, signature, public_key="tests/public.pem"):
+def valid_signature(payload, signature, public_key=f"tests/public.pem"):
     """Determines if a signature is valid"""
 
     with open(public_key, "rb") as f:
@@ -30,8 +30,7 @@ def valid_signature(payload, signature, public_key="tests/public.pem"):
 def validate():
     """Validates the incoming response. Returns 200 if signature and JSON data are valid; else 400."""
 
-    payload = request.get_json()
-    assert valid_signature(payload, request.headers["X-Payload-Signature"])
-    assert valid_payload(payload)
+    assert valid_signature(request.data, request.headers["X-Payload-Signature"])
+    assert valid_payload(request.get_json())
 
     return ""
