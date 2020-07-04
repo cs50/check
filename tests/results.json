@@ -2,6 +2,9 @@
     "id": "5f685770-8711-456b-abe5-a55bb08ad091",
     "commit_hash": "e03bee664b4c310579025e494eb086b213c01626",
     "pushed_at": "2020-07-04T08:23:11+00:00",
+    "org": "me50",
+    "repo": "cs50student2",
+    "slug": "cs50/problems/2020/x/hello",
     "check50": {
         "slug": "cs50/problems/2020/x/hello",
         "results": [
