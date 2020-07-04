@@ -24,9 +24,9 @@ script: |
 
   # Run tests
   FLASK_APP=tests/app flask run -h 0.0.0.0 &
-  docker run --network host -e "CHECK50_PRIVATE_KEY=$(< "$KEYS_DIR/privatae.pem")" "$IMAGE" \
+  docker run --network host -e "CHECK50_PRIVATE_KEY=$(< "$KEYS_DIR/private.pem")" "$IMAGE" \
     --branch "$CHECK50_BRANCH" \
-    --callback-url "http://localhost:5000/validate"
+    --callback-url "http://localhost:5000/validate" \
     --commit "$(jq -r .commit_hash $RESULTS_FILE)" \
     --job-id "$(jq -r .id $RESULTS_FILE)" \
     --org "$CHECK50_ORG" \
