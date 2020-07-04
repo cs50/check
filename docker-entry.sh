@@ -5,47 +5,67 @@ set -e
 # Usage instructions
 usage () {
     echo "Usage: $0 OPTION..."
-    echo "-t, --token             TOKEN           GitHub access token used for cloning and pushing"
-    echo "-o, --organization      ORGANIZATION    organization name"
-    echo "-r, --repository        REPOSITORY      repository"
-    echo "-b, --branch            BRANCH          branch within the repository"
-    echo "-c, --commit            SHA             commit to check out"
-    echo "-s, --style50                           whether to use style50"
-    echo "-cb, --callback-url     URL             callback URL"
-    echo "-h, --help                              display help message"
+    echo "--branch            BRANCH          branch to clone"
+    echo "--callback-url      URL             callback URL"
+    echo "--commit            SHA             commit to check out"
+    echo "--job-id            ID              job id"
+    echo "--org               ORGANIZATION    organization name"
+    echo "--pushed-at         DATETIME        date and time of push"
+    echo "--repo              REPOSITORY      repository name"
+    echo "--style50                           whether to use style50"
+    echo "--token             TOKEN           GitHub access token used for cloning and pushing"
+    echo "--help                              display help message"
     exit 1
 }
+
 
 # Get command-line args
 while [ $# -gt 0 ]; do
     case $1 in
-        -t|--token)
-            shift
-            TOKEN="$1"
-            ;;
-        -r|--repository)
-            shift
-            REPO="$1"
-            ;;
-        -b|--branch)
+        --branch)
             shift
             BRANCH="$1"
             ;;
-        -c|--commit)
-            shift
-            COMMIT="$1"
-            ;;
-        -s|--style50)
-            STYLE=1
-            ;;
-        -o|--organization)
-            shift
-            ORG="$1"
-            ;;
-        -cb|--callback-url)
+
+        --callback-url)
             shift
             CALLBACK_URL="$1"
             ;;
+
+        --commit)
+            shift
+            COMMIT="$1"
+            ;;
+
+        --job-id)
+            shift
+            JOB_ID="$1"
+            ;;
+
+        --org)
+            shift
+            ORG="$1"
+            ;;
+
+        --pushed-at)
+            shift
+            PUSHED_AT="$1"
+            ;;
+
+        --repo)
+            shift
+            REPO="$1"
+            ;;
+
+        --style50)
+            STYLE=1
+            ;;
+
+        --token)
+            shift
+            TOKEN="$1"
+            ;;
+
         *)
             usage
             ;;
@@ -121,7 +141,7 @@ echo "check50 result is $CHECK50_RESULT"
 
 # Construct payload
 PAYLOAD="{ \
-    \"id\": \"$CHECK50_ID\", \
+    \"id\": \"$JOB_ID\", \
     \"org\": \"$ORG\", \
     \"repo\": \"$REPO\", \
     \"slug\": \"$BRANCH\", \
@@ -129,7 +149,7 @@ PAYLOAD="{ \
     \"style50\": $STYLE50_RESULT, \
     \"check50\": $CHECK50_RESULT, \
     \"tag_hash\": \"$TAG_HASH\", \
-    \"pushed_at\": \"$CHECK50_PUSHED_AT\"
+    \"pushed_at\": \"$PUSHED_AT\"
 }"
 
 echo "Payload is $PAYLOAD"
@@ -138,7 +158,7 @@ PAYLOAD="$(jq -c . <<<"$PAYLOAD")"
 echo "Compact payload is $PAYLOAD"
 
 echo "Signing payload..."
-SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign /keys/private.pem <(echo -n "$PAYLOAD") | openssl base64 -A)"
+SIGNATURE="$(openssl dgst -sha512 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-2 -sign <(echo -e "$CHECK50_PRIVATE_KEY") <(echo -n "$PAYLOAD") | openssl base64 -A)"
 
 # Send payload to callback URL
 echo "Sending payload to $CALLBACK_URL..."
