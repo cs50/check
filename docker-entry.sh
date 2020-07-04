@@ -4,7 +4,7 @@ set -e
 
 # Usage instructions
 usage () {
-    echo "Usage: $0 OPTION..." 
+    echo "Usage: $0 OPTION..."
     echo "-t, --token             TOKEN           GitHub access token used for cloning and pushing"
     echo "-o, --organization      ORGANIZATION    organization name"
     echo "-r, --repository        REPOSITORY      repository"
@@ -45,9 +45,6 @@ while [ $# -gt 0 ]; do
         -cb|--callback-url)
             shift
             CALLBACK_URL="$1"
-            ;;
-        -h|--help)
-            usage
             ;;
         *)
             usage
