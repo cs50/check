@@ -32,7 +32,7 @@ script: |
     --repo "$CHECK50_REPO"  \
     --slug "$CHECK50_BRANCH" \
     --style50 \
-    --token "$CHECK50_TOKEN"
+    --token "$GITHUB_TOKEN"
 
 before_deploy:
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
