@@ -37,6 +37,4 @@ ENV CHECK50_PATH  "~/.local/share/check50"
 RUN git config --global user.name bot50 && \
     git config --global user.email bot@cs50.harvard.edu
 
-ENV CHECK50_WORKERS "4"
-
-CMD [ "/docker-entry.sh" ]
+ENTRYPOINT [ "/docker-entry.sh" ]

@@ -1,10 +1,39 @@
-sudo: required
 services: docker
 branches:
   except: /^\d+$/
+env:
+- CHECK50_ORG="me50" CHECK50_REPO="cs50student2" CHECK50_BRANCH="cs50/problems/2020/x/hello" RESULTS_FILE="tests/results.json"
+language: python
+python: 3.6
+install: pip install Flask lib50
 script: |
-  export TRAVIS_TAG=$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))
-  docker build . -t "$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
+  #!/bin/bash
+
+  set -e
+
+  # Generate key pair
+  openssl genpkey -out "tests/private.pem" -outform PEM -algorithm RSA -pkeyopt rsa_keygen_bits:2048
+  openssl pkey -pubout -inform PEM -outform PEM -in "tests/private.pem" -out "tests/public.pem"
+
+  # Build image
+  export TRAVIS_TAG="$(( $(git tag --list --sort=version:refname | tail -n1) + 1 ))"
+  IMAGE="$TRAVIS_REPO_SLUG:$TRAVIS_TAG"
+  docker build . -t "$IMAGE"
+
+  # Run tests
+  FLASK_APP=tests/app flask run -h 0.0.0.0 &
+  docker run --network host -e "CHECK50_PRIVATE_KEY=$(< "tests/private.pem")" "$IMAGE" \
+    --branch "$CHECK50_BRANCH" \
+    --callback-url "http://localhost:5000/validate" \
+    --commit "$(jq -r .commit_hash $RESULTS_FILE)" \
+    --job-id "$(jq -r .id $RESULTS_FILE)" \
+    --org "$CHECK50_ORG" \
+    --pushed-at "$(jq -r .pushed_at $RESULTS_FILE)" \
+    --repo "$CHECK50_REPO"  \
+    --slug "$CHECK50_BRANCH" \
+    --style50 \
+    --token "$GITHUB_TOKEN"
+
 before_deploy:
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 - docker tag "$TRAVIS_REPO_SLUG:$TRAVIS_TAG" "$TRAVIS_REPO_SLUG:latest"
@@ -13,12 +42,10 @@ before_deploy:
 deploy:
 - provider: script
   script: docker push "$TRAVIS_REPO_SLUG:$TRAVIS_TAG" && docker push "$TRAVIS_REPO_SLUG:latest"
-  skip_cleanup: true
   on:
     branch: master
 - provider: releases
-  api_key: $GITHUB_TOKEN
-  skip_cleanup: true
+  token: $GITHUB_TOKEN
   on:
     branch: master
 notifications:
