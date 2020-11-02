@@ -12,6 +12,8 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 def valid_payload(payload):
     """Gets the expected payload."""
 
+    del payload["check50"]["version"]
+    del payload["style50"]["version"]
     del payload["tag_hash"]
     with open(os.path.join(dirname, "results.json")) as f:
         return payload == json.load(f)

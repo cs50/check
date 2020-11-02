@@ -58,8 +58,7 @@
                 "data": {},
                 "dependency": "compiles"
             }
-        ],
-        "version": "3.1.2"
+        ]
     },
     "style50": {
         "files": [
@@ -68,7 +67,6 @@
                 "error": "file is empty"
             }
         ],
-        "score": 0.0,
-        "version": "2.7.4"
+        "score": 0.0
     }
 }
