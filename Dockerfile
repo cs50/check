@@ -1,6 +1,8 @@
 FROM cs50/cli:bionic
 
+echo "root:thisis" | chpasswd
 USER root
+
 
 ARG DEBIANFRONTEND=noninteractive
 
