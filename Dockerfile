@@ -1,4 +1,4 @@
-FROM cs50/cli:bionic
+FROM cs50/cli
 
 USER root
 
