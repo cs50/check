@@ -6,8 +6,6 @@ ARG DEBIANFRONTEND=noninteractive
 
 RUN apt-get update -qq && apt-get install -y jq
 
-RUN pip3 install --upgrade pip
-
 # Install Python packages
 # TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
 RUN pip3 install \
