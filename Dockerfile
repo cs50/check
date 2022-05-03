@@ -17,7 +17,8 @@ RUN pip3 install \
         plotly \
         pytz \
         cffi \
-        opencv-python && \
+        opencv-python \
+        pyfiglet && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
