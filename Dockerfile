@@ -18,6 +18,8 @@ RUN pip3 install \
         pytz \
         cffi \
         opencv-python \
+        inflect \
+        emoji \
         pyfiglet && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
