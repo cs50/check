@@ -21,8 +21,7 @@ RUN pip3 install \
         inflect \
         emoji \
         pyfiglet \
-        multipledispatch \
-        pytest && \
+        multipledispatch && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
