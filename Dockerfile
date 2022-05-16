@@ -22,7 +22,8 @@ RUN pip3 install \
         emoji \
         pyfiglet \
         multipledispatch \
-        Pillow && \
+        Pillow \
+        tabulate && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
