@@ -23,7 +23,9 @@ RUN pip3 install \
         pyfiglet \
         multipledispatch \
         Pillow \
-        tabulate && \
+        tabulate \
+        validators \ 
+        validator-collection && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
