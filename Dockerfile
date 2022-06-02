@@ -25,7 +25,8 @@ RUN pip3 install \
         Pillow \
         tabulate \
         validators \ 
-        validator-collection && \
+        validator-collection \
+        fpdf2 && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 COPY ./docker-entry.sh /
