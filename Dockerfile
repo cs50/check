@@ -24,7 +24,7 @@ RUN pip3 install \
         multipledispatch \
         Pillow \
         tabulate \
-        validators \ 
+        validators \
         validator-collection \
         fpdf2 && \
     python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
@@ -39,6 +39,7 @@ RUN chmod a+x /docker-entry.sh
 RUN sed -i '/^ubuntu ALL=(ALL) NOPASSWD:ALL$/d' /etc/sudoers
 
 USER ubuntu
+ENV PATH="/opt/cs50/bin:/opt/bin:${PATH}"
 
 # Clone checks
 ENV CHECK50_PATH  "~/.local/share/check50"
