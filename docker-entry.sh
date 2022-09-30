@@ -2,6 +2,9 @@
 
 set -e
 
+# Use login shell environment variables
+source /etc/profile.d/cli.sh
+
 # Usage instructions
 usage () {
     echo "Usage: $0 OPTION..."
