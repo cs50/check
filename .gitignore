@@ -2,5 +2,4 @@
 __pycache__
 !.github
 !.gitignore
-!.travis.yml
 *.pem
