@@ -137,7 +137,9 @@ echo -n "null" > "$CHECK50_OUT"
 
 if [ -n "$SLUG" ]; then
     echo "Cloning checks at $SLUG..."
+    cd ..
     python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$SLUG" "$TOKEN"
+    cd
 
     echo "Running check50..."
     sandbox "check50 --local --no-download-checks --log-level=debug --output=json --output-file='$CHECK50_OUT' '$SLUG'" || true
