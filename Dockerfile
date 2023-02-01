@@ -26,8 +26,10 @@ RUN pip3 install \
         tabulate \
         validators \
         validator-collection \
-        fpdf2 && \
-    python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
+        fpdf2
+
+# Install nltk data
+RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 # Install X server
 RUN apt install xvfb -y
