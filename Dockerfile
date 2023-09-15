@@ -27,7 +27,7 @@ RUN pip3 install \
         validators \
         validator-collection \
         fpdf2 \
-        "SQLAlchemy==1.4.46"
+        SQLAlchemy==1.4.49
 
 # Install nltk data
 RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
