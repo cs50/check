@@ -32,10 +32,6 @@ RUN pip3 install \
 # Install nltk data
 RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
-# Install X server
-RUN apt install xvfb -y
-ENV DISPLAY=":0"
-
 COPY ./docker-entry.sh /
 RUN chmod a+x /docker-entry.sh
 
