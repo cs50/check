@@ -8,7 +8,7 @@ RUN apt-get update -qq && apt-get install -y jq
 
 # Install Python packages
 # TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
-RUN pip3 install \
+RUN pip3 install --no-cache-dir \
         flask_sqlalchemy \
         nltk \
         numpy \
@@ -28,6 +28,9 @@ RUN pip3 install \
         validator-collection \
         fpdf2 \
         SQLAlchemy==1.4.49
+
+# Install CS50 Python packages
+RUN pip3 install cs50 --upgrade --no-cache-dir
 
 # Install nltk data
 RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
