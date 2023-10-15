@@ -26,7 +26,7 @@ RUN pip3 install --no-cache-dir \
         tabulate \
         validators \
         validator-collection \
-        fpdf2 \
+        fpdf2==2.7.6 \
         SQLAlchemy==1.4.49
 
 # Install CS50 Python packages
