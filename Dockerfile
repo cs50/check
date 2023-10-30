@@ -5,6 +5,9 @@ USER root
 ARG DEBIANFRONTEND=noninteractive
 
 
+RUN apt-get update -qq && apt-get install -y jq
+
+
 # Suggested build environment for Python, per pyenv, even though we're building ourselves
 # https://github.com/pyenv/pyenv/wiki#suggested-build-environment
 RUN apt update && \
@@ -33,10 +36,27 @@ RUN cd /tmp && \
     pip3 install --no-cache-dir --upgrade pip
 
 
-RUN apt-get update -qq && apt-get install -y jq
+# Install Python packages for Python 3.12.x
+RUN apt update && \
+    apt install --no-install-recommends --upgrade --yes libmagic-dev `# For style50` && \
+    pip3 install --no-cache-dir \
+        awscli \
+        "check50<4" \
+        compare50 \
+        cs50 \
+        Flask \
+        Flask-Session \
+        help50 \
+        pytest \
+        "pydantic<2" \
+        render50 \
+        s3cmd \
+        setuptools \
+        style50 \
+        "submit50<4"
 
 
-# Install Python packages
+# Install additional Python packages
 # TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
 RUN pip3 install --no-cache-dir \
         flask_sqlalchemy \
