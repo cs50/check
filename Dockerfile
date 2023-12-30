@@ -83,16 +83,19 @@ RUN pip3 install --no-cache-dir \
     opencv-python \
     scikit-learn \
     tf-nightly \
-    transformers && \
-    python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
+    transformers
+    
+    
+# Install nltk data
+RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
+
+
+# Dependencies for OpenCV
+RUN apt-get install -y libgl1
 
 
 # Install CS50 Python packages
 RUN pip3 install cs50 --upgrade --no-cache-dir
-
-
-# Install nltk data
-RUN python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 
 COPY ./docker-entry.sh /
