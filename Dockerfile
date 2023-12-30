@@ -5,7 +5,7 @@ USER root
 ARG DEBIANFRONTEND=noninteractive
 
 
-RUN apt-get update -qq && apt-get install -y jq
+RUN apt-get update -qq && apt-get install -y jq cmake
 
 
 # Suggested build environment for Python, per pyenv, even though we're building ourselves
@@ -60,14 +60,12 @@ RUN apt update && \
 # TODO remove werkzeug after https://github.com/fengsp/flask-session/issues/99 is fixed
 RUN pip3 install --no-cache-dir \
         flask_sqlalchemy \
-        nltk \
         numpy \
         pandas \
         passlib \
         plotly \
         pytz \
         cffi \
-        opencv-python \
         inflect \
         emoji \
         pyfiglet \
@@ -77,6 +75,16 @@ RUN pip3 install --no-cache-dir \
         validators \
         validator-collection \
         fpdf2==2.7.6
+
+
+# Install ML packages for CS50 AI
+RUN pip3 install --no-cache-dir \
+    nltk \
+    opencv-python \
+    scikit-learn \
+    tf-nightly \
+    transformers && \
+    python3 -m nltk.downloader -d /usr/share/nltk_data/ punkt
 
 
 # Install CS50 Python packages
