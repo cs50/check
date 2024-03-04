@@ -36,7 +36,7 @@ RUN pip3 install --no-cache-dir \
     opencv-python \
     scikit-learn \
     tf-nightly \
-    transformers
+    transformers==4.35.0
 
 
 # Install nltk data
