@@ -17,6 +17,7 @@ RUN pip3 install --no-cache-dir \
         passlib \
         plotly \
         pytz \
+        cachelib \
         cffi \
         inflect \
         emoji \
