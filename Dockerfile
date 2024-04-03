@@ -32,7 +32,6 @@ RUN pip3 install --no-cache-dir \
 
 # Install ML packages for CS50 AI
 RUN pip3 install --no-cache-dir \
-    clang-format \
     nltk \
     opencv-python \
     scikit-learn \
