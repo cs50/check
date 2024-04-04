@@ -51,6 +51,10 @@ RUN apt-get install -y libgl1
 RUN pip3 install cs50 --upgrade --no-cache-dir
 
 
+# Pin inflect to 7.0.0
+RUN pip3 install inflect==7.0.0 --no-cache-dir
+
+
 COPY ./docker-entry.sh /
 RUN chmod a+x /docker-entry.sh
 
