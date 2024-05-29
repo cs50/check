@@ -1,11 +1,14 @@
-FROM cs50/cli:amd64
+FROM cs50/cli
 
 USER root
 
 ARG DEBIANFRONTEND=noninteractive
 
+# Remove customized R from cs50/cli
+RUN rm -rf /opt/cs50/bin/R
 
-RUN apt-get update -qq && apt-get install -y jq cmake
+
+RUN apt-get update -qq && apt-get install -y jq cmake pkg-config libhdf5-dev r-base
 
 
 # Install additional Python packages
