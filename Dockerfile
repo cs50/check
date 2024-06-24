@@ -12,9 +12,7 @@ RUN rm -rf /opt/cs50/bin/R
 RUN apt-get update -qq && apt-get install -y \
     cmake \
     jq \
-    libhdf5-dev \
-    pkg-config \
-    r-base
+    pkg-config
 
 
 # Install additional Python packages
@@ -37,6 +35,16 @@ RUN pip3 install --no-cache-dir \
         validators \
         validator-collection \
         fpdf2==2.7.6
+
+
+# Install R for CS50 R
+RUN apt-get update -qq && apt-get install -y \
+    libhdf5-dev `# For R` \
+    liblapack3 `# For R` \
+    libpangocairo-1.0-0 `# For R` \
+    libtiff6 `# For R` \
+    libxt6 `# For R` \
+    r-base
 
 
 # Install ML packages for CS50 AI
