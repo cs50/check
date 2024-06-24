@@ -8,7 +8,13 @@ ARG DEBIANFRONTEND=noninteractive
 RUN rm -rf /opt/cs50/bin/R
 
 
-RUN apt-get update -qq && apt-get install -y jq cmake pkg-config libhdf5-dev r-base
+# Install additional Ubuntu packages
+RUN apt-get update -qq && apt-get install -y \
+    cmake \
+    jq \
+    libhdf5-dev \
+    pkg-config \
+    r-base
 
 
 # Install additional Python packages
