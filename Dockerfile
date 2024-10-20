@@ -121,7 +121,8 @@ RUN pip3 install --no-cache-dir \
     transformers==4.35.0
 
 # Install nltk data
-RUN python3 -m nltk -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
+RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
+
 
 # Dependencies for OpenCV
 RUN apt-get install -y libgl1
