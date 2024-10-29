@@ -29,7 +29,7 @@ RUN pip3 install --no-cache-dir \
         emoji \
         pyfiglet \
         multipledispatch \
-        Pillow \
+        Pillow==10.4.0 \
         tabulate \
         validators \
         validator-collection \
