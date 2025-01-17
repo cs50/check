@@ -33,7 +33,7 @@ RUN pip3 install --no-cache-dir \
         tabulate \
         validators \
         validator-collection \
-        fpdf2==2.7.6
+        fpdf2==2.8.2
 
 # Install R and dependencies for tidyverse library
 RUN apt-get update -qq && apt-get install -y \
