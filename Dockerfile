@@ -97,8 +97,8 @@ RUN wget https://cloud.r-project.org/src/contrib/diffobj_0.3.5.tar.gz && \
 RUN R -e "install.packages(c('waldo'), repos='http://cran.rstudio.com/')"
 
 # testthat
-RUN wget https://cran.r-project.org/src/contrib/testthat_3.2.2.tar.gz && \
-    tar -xzf testthat_3.2.2.tar.gz && \
+RUN wget https://cran.r-project.org/src/contrib/testthat_3.2.3.tar.gz && \
+    tar -xzf testthat_3.2.3.tar.gz && \
     cd testthat && \
     R CMD INSTALL -l /usr/local/lib/R/site-library . --no-test-load --no-clean-on-error --verbose && \
     cd src && \
@@ -110,7 +110,7 @@ RUN wget https://cran.r-project.org/src/contrib/testthat_3.2.2.tar.gz && \
     g++ -shared -o testthat.so init.o reassign.o test-catch.o test-example.o test-runner.o -L/usr/lib/R/lib -lR && \
     mv testthat.so /usr/local/lib/R/site-library/testthat/libs/ && \
     cd /home/ubuntu && \
-    rm -rf testthat testthat_3.2.2.tar.gz
+    rm -rf testthat testthat_3.2.3.tar.gz
 
 # Install ML packages for CS50 AI
 RUN pip3 install --no-cache-dir \
