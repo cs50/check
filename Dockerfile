@@ -54,6 +54,10 @@ RUN pip3 install cs50 --upgrade --no-cache-dir
 # Pin inflect to 7.0.0
 RUN pip3 install inflect==7.0.0 --no-cache-dir
 
+# Pin protobuf to 5.29.4
+# https://github.com/microsoft/PhiCookBook/issues/286#issuecomment-2798922731
+RUN pip3 install protobuf==5.29.4 --no-cache-dir
+
 # Install R and dependencies for tidyverse library
 RUN apt-get update -qq && apt-get install -y \
     automake \
