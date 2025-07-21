@@ -51,9 +51,6 @@ RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share
 # Install CS50 Python packages
 RUN pip3 install cs50 --upgrade --no-cache-dir
 
-# Pin inflect to 7.0.0
-RUN pip3 install inflect==7.0.0 --no-cache-dir
-
 # Pin protobuf to 5.29.4
 # https://github.com/microsoft/PhiCookBook/issues/286#issuecomment-2798922731
 RUN pip3 install protobuf==5.29.4 --no-cache-dir
