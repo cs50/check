@@ -16,4 +16,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: cs50/check:${{ github.sha }},cs50/check:latest
+          build-args: |
+            TAG=${{ github.ref == 'refs/heads/main' && 'latest' || 'canary' }}
+          tags: |
+            cs50/check:${{ github.sha }}
+            cs50/check:canary
+            ${{ github.ref == 'refs/heads/main' && 'cs50/check:latest' || '' }}

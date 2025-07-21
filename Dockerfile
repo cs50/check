@@ -1,4 +1,5 @@
-FROM cs50/cli
+ARG TAG=latest
+FROM cs50/cli:${TAG}
 
 USER root
 
