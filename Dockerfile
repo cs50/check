@@ -52,10 +52,6 @@ RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share
 # Install CS50 Python packages
 RUN pip3 install cs50 --upgrade --no-cache-dir
 
-# Pin protobuf to 5.29.4
-# https://github.com/microsoft/PhiCookBook/issues/286#issuecomment-2798922731
-RUN pip3 install protobuf==5.29.4 --no-cache-dir
-
 # Install R and dependencies for tidyverse library
 RUN apt-get update -qq && apt-get install -y \
     automake \
