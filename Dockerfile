@@ -18,39 +18,13 @@ RUN apt-get update -qq && apt-get install -y \
 # Dependencies for OpenCV
 RUN apt-get install -y libgl1
 
-# Install additional Python packages
-RUN pip3 install --no-cache-dir \
-    flask_sqlalchemy \
-    numpy \
-    pandas \
-    passlib \
-    plotly \
-    pytz \
-    cachelib \
-    cffi \
-    inflect \
-    emoji \
-    pyfiglet \
-    multipledispatch \
-    Pillow==10.4.0 \
-    tabulate \
-    validators \
-    validator-collection \
-    fpdf2==2.8.2
-
-# Install ML packages for CS50 AI
-RUN pip3 install --no-cache-dir \
-    nltk \
-    opencv-python \
-    scikit-learn \
-    tf-nightly \
-    transformers==4.35.0
+# Install Python packages from requirements file
+COPY dependencies/python/requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
 # Install nltk data
 RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
-
-# Install CS50 Python packages
-RUN pip3 install cs50 --upgrade --no-cache-dir
 
 # Install R and dependencies for tidyverse library
 RUN apt-get update -qq && apt-get install -y \
