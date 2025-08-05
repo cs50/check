@@ -113,7 +113,7 @@ echo "Removing remote origin..."
 git remote remove origin
 
 function sandbox() {
-    eval "CHECK50_PRIVATE_KEY= TOKEN= $@"
+    eval "CHECK50_PRIVATE_KEY= TOKEN= PYTHON_COLORS=0 $@"
 }
 
 # Get style50 result
