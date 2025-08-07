@@ -26,3 +26,7 @@ scikit-learn==1.7.1
 tf-nightly==2.21.0.dev20250801
 tf-keras
 transformers==4.35.0
+
+# check50 and lib50
+git+https://github.com/cs50/check50.git@4.0.0-dev#egg=check50
+git+https://github.com/cs50/lib50.git@develop#egg=lib50
