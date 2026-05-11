@@ -58,44 +58,22 @@ RUN R -e "install.packages(c(\
     'pkgload', \
     'praise', \
     'rprojroot', \
-    'tidyverse'), repos='http://cran.rstudio.com/')"
+    'tidyverse', \
+    'waldo'), repos='https://cloud.r-project.org')"
 
-# brio (required by testthat)
-RUN wget https://cloud.r-project.org/src/contrib/brio_1.1.5.tar.gz && \
-    tar -xzf brio_1.1.5.tar.gz && \
-    cd brio && \
-    R CMD INSTALL -l /usr/local/lib/R/site-library . --no-test-load --no-clean-on-error --verbose && \
-    cd src && \
-    R CMD SHLIB brio.c && \
-    mv brio.so /usr/local/lib/R/site-library/brio/libs/brio.so && \
-    cd /home/ubuntu && \
-    rm -rf brio brio_1.1.5.tar.gz
-
-# diffobj (required by testthat and waldo)
-RUN wget https://cloud.r-project.org/src/contrib/diffobj_0.3.6.tar.gz && \
-    tar -xzf diffobj_0.3.6.tar.gz && \
-    cd diffobj && \
-    R CMD INSTALL -l /usr/local/lib/R/site-library . --no-test-load --no-clean-on-error --verbose && \
-    cd src && \
-    gcc -I/usr/share/R/include -DNDEBUG -fpic -O2 -c diff.c -o diff.o && \
-    gcc -I/usr/share/R/include -DNDEBUG -fpic -O2 -c init.c -o init.o && \
-    gcc -I/usr/share/R/include -DNDEBUG -fpic -O2 -c diffobj.c -o diffobj.o && \
-    gcc -shared -o diffobj.so diff.o init.o diffobj.o -L/usr/lib/R/lib -lR && \
-    mv diffobj.so /usr/local/lib/R/site-library/diffobj/libs/ && \
-    cd /home/ubuntu && \
-    rm -rf diffobj diffobj_0.3.6.tar.gz
-
-# waldo (required by testthat)
-RUN R -e "install.packages(c('waldo'), repos='http://cran.rstudio.com/')"
-
-# testthat (R CMD INSTALL builds testthat.so itself; no manual recompile —
-# testthat 3.3.x dropped reassign.c, breaking any hand-rolled src/ build)
-RUN wget https://cran.r-project.org/src/contrib/testthat_3.3.2.tar.gz && \
-    tar -xzf testthat_3.3.2.tar.gz && \
-    cd testthat && \
-    R CMD INSTALL -l /usr/local/lib/R/site-library . --no-test-load --no-clean-on-error --verbose && \
-    cd /home/ubuntu && \
-    rm -rf testthat testthat_3.3.2.tar.gz
+# Pinned R packages required by testthat. Try Archive/ first (stable URL for
+# any past version), fall back to src/contrib/ while a pin is the current release.
+RUN set -e; cd /tmp; for pkg in \
+        brio:1.1.5 \
+        diffobj:0.3.6 \
+        testthat:3.3.2; do \
+      name="${pkg%:*}"; tarball="${name}_${pkg#*:}.tar.gz"; \
+      wget -q "https://cloud.r-project.org/src/contrib/Archive/${name}/${tarball}" \
+        || wget -q "https://cloud.r-project.org/src/contrib/${tarball}"; \
+      tar -xzf "${tarball}"; \
+      R CMD INSTALL -l /usr/local/lib/R/site-library "${name}" --no-test-load --no-clean-on-error; \
+      rm -rf "${name}" "${tarball}"; \
+    done
 
 COPY ./docker-entry.sh /
 RUN chmod a+x /docker-entry.sh
