@@ -48,6 +48,7 @@ RUN apt-get update -qq && apt-get install -y \
     libtiff-dev \
     libpcre3-dev \
     libcurl4-gnutls-dev \
+    libuv1-dev `# For R 'fs' (transitive dep of pkgload, tidyverse, etc.)` \
     r-base
 
 # Install R libraries
@@ -87,19 +88,12 @@ RUN wget https://cloud.r-project.org/src/contrib/diffobj_0.3.6.tar.gz && \
 # waldo (required by testthat)
 RUN R -e "install.packages(c('waldo'), repos='http://cran.rstudio.com/')"
 
-# testthat
+# testthat (R CMD INSTALL builds testthat.so itself; no manual recompile —
+# testthat 3.3.x dropped reassign.c, breaking any hand-rolled src/ build)
 RUN wget https://cran.r-project.org/src/contrib/testthat_3.3.2.tar.gz && \
     tar -xzf testthat_3.3.2.tar.gz && \
     cd testthat && \
     R CMD INSTALL -l /usr/local/lib/R/site-library . --no-test-load --no-clean-on-error --verbose && \
-    cd src && \
-    gcc -I/usr/share/R/include -DNDEBUG -fpic -O2 -c init.c -o init.o && \
-    gcc -I/usr/share/R/include -DNDEBUG -fpic -O2 -c reassign.c -o reassign.o && \
-    g++ -I/usr/share/R/include -I../inst/include -DNDEBUG -fpic -O2 -c test-catch.cpp -o test-catch.o && \
-    g++ -I/usr/share/R/include -I../inst/include -DNDEBUG -fpic -O2 -c test-example.cpp -o test-example.o && \
-    g++ -I/usr/share/R/include -I../inst/include -DNDEBUG -fpic -O2 -c test-runner.cpp -o test-runner.o && \
-    g++ -shared -o testthat.so init.o reassign.o test-catch.o test-example.o test-runner.o -L/usr/lib/R/lib -lR && \
-    mv testthat.so /usr/local/lib/R/site-library/testthat/libs/ && \
     cd /home/ubuntu && \
     rm -rf testthat testthat_3.3.2.tar.gz
 
