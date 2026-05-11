@@ -23,7 +23,7 @@ validators==0.35.0
 nltk==3.9.1
 opencv-python
 scikit-learn==1.7.1
-tf-nightly==2.21.0.dev20250801
+tf-nightly==2.22.0.dev20260510
 tf-keras
 transformers==4.35.0
 
