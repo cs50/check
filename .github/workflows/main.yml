@@ -1,5 +1,7 @@
 name: Build and push
-on: push
+on:
+  - push
+  - workflow_dispatch
 jobs:
   build-and-push:
     runs-on: ubuntu-2604-64-cores-amd
@@ -17,8 +19,9 @@ jobs:
         with:
           push: true
           build-args: |
-            TAG=${{ github.ref == 'refs/heads/main' && 'latest' || 'canary' }}
+            TAG=${{ github.ref == 'refs/heads/main' && 'latest' || github.ref == 'refs/heads/ubuntu-26.04' && 'ubuntu-26.04' || 'canary' }}
           tags: |
             cs50/check:${{ github.sha }}
             cs50/check:canary
             ${{ github.ref == 'refs/heads/main' && 'cs50/check:latest' || '' }}
+            ${{ github.ref == 'refs/heads/ubuntu-26.04' && 'cs50/check:ubuntu-26.04' || '' }}

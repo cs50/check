@@ -1,4 +1,5 @@
-ARG TAG=latest
+# Base image tag; ubuntu-26.04 while testing the new runtime, set back to latest when cs50/cli's ubuntu-26.04 branch is merged
+ARG TAG=ubuntu-26.04
 FROM cs50/cli:${TAG}
 
 USER root
@@ -46,7 +47,7 @@ RUN apt-get update -qq && apt-get install -y \
     libjpeg-dev \
     libcairo2-dev \
     libtiff-dev \
-    libpcre3-dev \
+    libpcre2-dev \
     libcurl4-gnutls-dev \
     libuv1-dev `# For R 'fs' (transitive dep of pkgload, tidyverse, etc.)` \
     r-base
