@@ -8,3 +8,7 @@ rebuild:
 
 run:
 	docker run --interactive --publish-all --rm --tty --volume "$(PWD)":/root cs50/check
+
+# Same checks CI runs before pushing (tests/smoke.sh)
+test:
+	bash tests/smoke.sh cs50/check
