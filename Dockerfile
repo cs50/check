@@ -1,3 +1,4 @@
+# Base image tag (e.g., ubuntu-26.04 to build on a specific release of cs50/cli)
 ARG TAG=latest
 FROM cs50/cli:${TAG}
 
@@ -23,6 +24,17 @@ COPY dependencies/python/requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
     rm /tmp/requirements.txt
 
+# Fail the build, not a check50 job, if the TF stack does not import together.
+# Order matters: `tf.keras` is resolved on first use, and loading transformers' TF
+# model classes sets TF_USE_LEGACY_KERAS=1 in that process, so tf.keras is checked
+# first, as a check50 job that imports tensorflow alone would see it (Keras 3).
+RUN python3 -c "\
+import tensorflow as tf, tf_keras; \
+v = getattr(tf.keras, '__version__', None); \
+assert v and v.startswith('3.'), f'tf.keras resolved to {tf.keras.Sequential.__module__} ({v}); expected Keras 3'; \
+assert tf_keras.__version__.startswith('2.'), tf_keras.__version__; \
+from transformers import TFBertForMaskedLM"
+
 # Install nltk data
 RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
 
@@ -46,7 +58,7 @@ RUN apt-get update -qq && apt-get install -y \
     libjpeg-dev \
     libcairo2-dev \
     libtiff-dev \
-    libpcre3-dev \
+    libpcre2-dev \
     libcurl4-gnutls-dev \
     libuv1-dev `# For R 'fs' (transitive dep of pkgload, tidyverse, etc.)` \
     r-base
@@ -76,7 +88,9 @@ RUN set -e; cd /tmp; for pkg in \
     done
 
 COPY ./docker-entry.sh /
-RUN chmod a+x /docker-entry.sh
+# Explicit mode: COPY keeps the build host's file mode, and the ubuntu user must be
+# able to read the script, not just execute it, for bash to run it
+RUN chmod 755 /docker-entry.sh
 
 RUN sed -i '/^ubuntu ALL=(ALL) NOPASSWD:ALL$/d' /etc/sudoers
 

@@ -1,6 +1,6 @@
 # Additional Python packages
 cachelib==0.14.0
-cffi==1.17.1
+cffi==2.1.1
 emoji==2.15.0
 Flask==3.1.3
 Flask-Session==0.8.0
@@ -9,7 +9,7 @@ fpdf2==2.8.7
 inflect==7.5.0
 multipledispatch==1.0.0
 numpy==2.4.5
-pandas==2.3.1
+pandas==2.3.3
 passlib==1.7.4
 Pillow==11.3.0
 plotly==6.7.0
@@ -21,11 +21,35 @@ validators==0.35.0
 
 # CS50 AI
 nltk==3.9.1
-opencv-python
-scikit-learn==1.7.1
-tf-nightly==2.22.0.dev20260510
-tf-keras
-transformers==4.35.0
+opencv-python==5.0.0.93  # what an unpinned install resolved to in the verified build; abi3 wheel
+scikit-learn==1.7.2
+
+# TensorFlow on Python 3.14 (2026-10): stable tensorflow has no 3.14 wheels until
+# 2.22 ships, so the TF stack is pinned to nightlies. Every package below that
+# decides what `tf.keras` resolves to is pinned, so rebuilding the same commit
+# (e.g. via workflow_dispatch) yields the same Keras.
+#
+#   - `tf.keras` is Keras 3 (keras-nightly). TF_USE_LEGACY_KERAS is deliberately
+#     NOT set in the image: this image has shipped Keras 3 to graders since
+#     tf-nightly replaced stable tensorflow (9982ecd), and check50 checks are
+#     written against it.
+#   - tf-keras-nightly (Keras 2) is installed only because transformers' TF model
+#     classes import `tf_keras` directly. Loading those classes sets
+#     TF_USE_LEGACY_KERAS=1 within that process, which routes `tf.keras` to Keras 2
+#     there if it has not been resolved yet; a job that imports tensorflow alone
+#     is unaffected.
+#   - tf-nightly and tf-keras-nightly must come from the same 2.22.0.dev line
+#     (tf-keras-nightly requires tf-nightly~=2.22.0.dev). dev20260924 is the last
+#     2.22 tf-nightly; there is no tf-keras-nightly build for that date, so the
+#     nearest one is used.
+#   - PyPI keeps roughly 8-9 months of tf-nightly builds (keras-nightly keeps all).
+#     Exit path, before ~mid-2027: tensorflow==2.22.x + tf-keras==2.22.x once they
+#     ship cp314 wheels, then drop keras-nightly (tensorflow 2.22 pins keras itself).
+tf-nightly==2.22.0.dev20260924
+keras-nightly==3.16.0.dev2026102404
+tf-keras-nightly==2.22.0.dev2026101709
+# 4.57.6 is the last 4.x release; 5.x drops TensorFlow support (TFBertForMaskedLM et al.)
+transformers==4.57.6
 
 # check50 and lib50
 git+https://github.com/cs50/check50.git@4.0.0-dev#egg=check50

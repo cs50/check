@@ -1,24 +1,50 @@
 name: Build and push
-on: push
+on:
+  - push
+  - workflow_dispatch
+
+# Tags published per build:
+#   main:              cs50/check:<sha>, cs50/check:canary, cs50/check:latest (built FROM cs50/cli:latest)
+#   any other branch:  cs50/check:<sha>, cs50/check:canary                    (built FROM cs50/cli:canary)
+# Nothing is pushed unless the built image passes tests/smoke.sh.
+
 jobs:
   build-and-push:
     runs-on: ubuntu-2604-64-cores-amd
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+
       - name: Login to DockerHub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        id: docker_build
+
+      - name: Build
         uses: docker/build-push-action@v7
         with:
-          push: true
+          load: true
           build-args: |
             TAG=${{ github.ref == 'refs/heads/main' && 'latest' || 'canary' }}
           tags: |
             cs50/check:${{ github.sha }}
             cs50/check:canary
             ${{ github.ref == 'refs/heads/main' && 'cs50/check:latest' || '' }}
+
+      - name: Check out tests
+        uses: actions/checkout@v7
+
+      - name: Smoke-test the build
+        run: |
+          bash tests/smoke.sh cs50/check:${{ github.sha }}
+
+      - name: Push to Docker Hub
+        run: |
+          docker push cs50/check:${{ github.sha }}
+          docker push cs50/check:canary
+
+      - name: Push to Docker Hub (latest)
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          docker push cs50/check:latest
