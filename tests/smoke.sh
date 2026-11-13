@@ -93,6 +93,27 @@ EOF
 echo "- check50 and style50 entry points import and parse their arguments"
 run "$IMAGE" bash -c 'check50 --help > /dev/null && style50 --help > /dev/null'
 
+echo "- style50 skips minified assets, bounds its runtime, and keeps its payload small"
+# Regression test for submissions that vendor e.g. bootstrap.min.css: style50 used to spend
+# the Job's whole deadline on a character diff of it and emit a payload too big to record,
+# so no results were ever recorded. Runs the style50 block of docker-entry.sh as the Job does.
+run --volume "$PWD/docker-entry.sh:/docker-entry.sh:ro" "$IMAGE" bash -c '
+    set -o errexit
+    mkdir -p /tmp/sub/static && cd /tmp/sub
+    printf "import sys\n\n\ndef main():\n    print(\"hi\")\n\n\nmain()\n" > app.py
+    python3 -c "print(\"\".join(f\".c{i}{{color:red;margin:{i}px}}\" for i in range(20000)))" > static/bootstrap.min.css
+    cp static/bootstrap.min.css static/vendored.css
+    STYLE=1
+    function sandbox() { eval "CHECK50_PRIVATE_KEY= TOKEN= PYTHON_COLORS=0 $@"; }
+    eval "$(sed -n "/^# Get style50 result/,/^# Get check50 result/p" /docker-entry.sh | sed "\$d")"
+    jq -e "
+        (.files | map(.name) | any(endswith(\"bootstrap.min.css\")) | not)
+        and (.files | map(select(.name | endswith(\"vendored.css\")) | .diff) == [\"(diff omitted: result too large to store)\"])
+        and (.files | map(select(.name | endswith(\"app.py\")) | .score) == [1])
+    " <<<"$STYLE50_RESULT" > /dev/null
+    test "$(printf %s "$STYLE50_RESULT" | wc -c)" -le 49152
+' || { echo "docker-entry.sh style50 block did not handle a large minified asset" >&2; exit 1; }
+
 echo "- R loads tidyverse and the pinned testthat"
 run "$IMAGE" Rscript -e '
     suppressPackageStartupMessages({ library(tidyverse); library(testthat) })

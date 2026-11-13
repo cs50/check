@@ -117,12 +117,44 @@ function sandbox() {
 }
 
 # Get style50 result
+#
+# style50 must never cost a submission its check50 results. This Job has a 2 minute
+# deadline and the callback only accepts a modestly sized payload, yet a single
+# vendored asset such as a 230 KB bootstrap.min.css makes style50 spend the better
+# part of a minute on a character-level diff and emit a payload of several hundred KB,
+# after which no results are recorded at all. So: skip minified assets, bound the run
+# time, keep the payload small, and fall back to null on any failure instead of
+# exiting (set -e).
 STYLE50_RESULT_DEFAULT="null"
 STYLE50_RESULT="$STYLE50_RESULT_DEFAULT"
+STYLE50_TIMEOUT="${STYLE50_TIMEOUT:-60}"
+# Compact size after which diffs are dropped so the payload stays within what the
+# callback accepts, with headroom for it being re-serialized less compactly.
+STYLE50_MAX_BYTES="${STYLE50_MAX_BYTES:-49152}"
+STYLE50_OMITTED_DIFF="(diff omitted: result too large to store)"
+
 if [ "$STYLE" == "1" ]; then
-    echo "Running style50..."
-    STYLE50_RESULT=$(sandbox 'style50 --verbose --ignore \*/.\* --output=json $PWD')
-    if [ $? -ne 0 ]; then
+    echo "Running style50 (timeout ${STYLE50_TIMEOUT}s)..."
+    STYLE50_OUT="$(mktemp)"
+
+    # --ignore patterns are fnmatch'ed against the full path, so a leading * also spans directories
+    if sandbox "timeout $STYLE50_TIMEOUT style50 --verbose --ignore \*/.\* --ignore \*.min.css --ignore \*.min.js --output=json \$PWD" > "$STYLE50_OUT" \
+        && STYLE50_RESULT="$(jq -c . "$STYLE50_OUT")" \
+        && [ -n "$STYLE50_RESULT" ]; then
+
+        # Files that already look good have their diff hidden by the renderer, so drop those first
+        if [ "$(printf %s "$STYLE50_RESULT" | wc -c)" -gt "$STYLE50_MAX_BYTES" ]; then
+            echo "style50 result exceeds $STYLE50_MAX_BYTES bytes, dropping diffs of files that look good..."
+            STYLE50_RESULT="$(jq -c '.files |= map(if .score == 1 then del(.diff) else . end)' <<<"$STYLE50_RESULT")"
+        fi
+
+        # Still too large: keep every file's score but replace the diffs with a note
+        if [ "$(printf %s "$STYLE50_RESULT" | wc -c)" -gt "$STYLE50_MAX_BYTES" ]; then
+            echo "style50 result still exceeds $STYLE50_MAX_BYTES bytes, dropping all diffs..."
+            STYLE50_RESULT="$(jq -c --arg note "$STYLE50_OMITTED_DIFF" '.files |= map(if has("diff") then .diff = $note else . end)' <<<"$STYLE50_RESULT")"
+        fi
+    else
+        echo "style50 failed or timed out, recording null..."
         STYLE50_RESULT="$STYLE50_RESULT_DEFAULT"
     fi
 
