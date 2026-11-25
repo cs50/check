@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Print the bin directory of the Python runtime check50 should run on for a set of checks.
+
+Usage: check50-runtime CHECKS_DIR
+
+Prints TENSORFLOW_RUNTIME/bin (default /opt/tensorflow/bin) if any Python file under
+CHECKS_DIR imports the TensorFlow stack, so that the caller can prepend it to PATH and
+have `check50`, `python3`, and anything the checks spawn run on the Python 3.14 runtime
+that has TensorFlow installed. Prints nothing otherwise, and check50 runs on cs50/cli's
+python3. Always exits 0: a check that cannot be parsed is left to check50 to report.
+
+Checks (e.g. ai50/projects/traffic and attention) import tensorflow in the check module
+itself and load student code into the check50 process via check50.py.import_, so the
+whole check50 process has to be on the TensorFlow runtime, not just the student's python3.
+"""
+
+import ast
+import os
+import sys
+from pathlib import Path
+
+# Top-level packages that are installed only into the TensorFlow runtime
+TENSORFLOW_PACKAGES = {"tensorflow", "tf_keras", "keras", "transformers"}
+
+
+def imports(path):
+    """Yield the top-level package name of every import statement in the file at path."""
+    try:
+        tree = ast.parse(path.read_bytes(), filename=str(path))
+    except (SyntaxError, ValueError):
+        return
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                yield alias.name.partition(".")[0]
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            yield node.module.partition(".")[0]
+
+
+def needs_tensorflow(checks_dir):
+    return any(
+        name in TENSORFLOW_PACKAGES
+        for path in Path(checks_dir).rglob("*.py")
+        for name in imports(path)
+    )
+
+
+def main():
+    if len(sys.argv) != 2:
+        print(__doc__.strip().splitlines()[2], file=sys.stderr)
+        sys.exit(2)
+    if needs_tensorflow(sys.argv[1]):
+        print(os.path.join(os.environ.get("TENSORFLOW_RUNTIME", "/opt/tensorflow"), "bin"))
+
+
+if __name__ == "__main__":
+    main()

@@ -21,22 +21,42 @@ RUN apt-get install -y libgl1
 
 # Install Python packages from requirements file
 COPY dependencies/python/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
-    rm /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+# Install nltk data
+RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
+
+# Python 3.14 runtime for checks that import TensorFlow
+#
+# The TensorFlow stack lags new Python releases by about a year (cp314 wheels arrived
+# eleven months after 3.14.0), and cs50/cli's python3 should not have to wait for it
+# (cs50/cli#254). So TensorFlow is installed into a venv on Ubuntu 26.04's own python3.14,
+# which stays 3.14 (with security updates) for the life of the release, and check50-runtime
+# routes a job onto it when its checks import the stack. Each runtime gets the same
+# requirements.txt, so a check behaves the same on either; only the TensorFlow packages
+# differ. Replace this runtime with cs50/cli's python3 once the stack supports it.
+ENV TENSORFLOW_RUNTIME=/opt/tensorflow
+COPY dependencies/python/requirements-tensorflow.txt /tmp/requirements-tensorflow.txt
+RUN apt-get update -qq && apt-get install -y python3.14 python3.14-venv && \
+    /usr/bin/python3.14 -m venv "$TENSORFLOW_RUNTIME" && \
+    "$TENSORFLOW_RUNTIME/bin/pip" install --no-cache-dir --upgrade "pip>=26.2.2" `# GHSA-6q48-6c7w-9gw2` && \
+    "$TENSORFLOW_RUNTIME/bin/pip" install --no-cache-dir -r /tmp/requirements.txt -r /tmp/requirements-tensorflow.txt && \
+    rm /tmp/requirements.txt /tmp/requirements-tensorflow.txt
+
+COPY ./check50-runtime /usr/local/bin/check50-runtime
+RUN chmod 755 /usr/local/bin/check50-runtime
 
 # Fail the build, not a check50 job, if the TF stack does not import together.
 # Order matters: `tf.keras` is resolved on first use, and loading transformers' TF
 # model classes sets TF_USE_LEGACY_KERAS=1 in that process, so tf.keras is checked
 # first, as a check50 job that imports tensorflow alone would see it (Keras 3).
-RUN python3 -c "\
+RUN "$TENSORFLOW_RUNTIME/bin/python3" -c "\
+import sys; assert sys.version_info[:2] == (3, 14), sys.version; \
 import tensorflow as tf, tf_keras; \
 v = getattr(tf.keras, '__version__', None); \
 assert v and v.startswith('3.'), f'tf.keras resolved to {tf.keras.Sequential.__module__} ({v}); expected Keras 3'; \
 assert tf_keras.__version__.startswith('2.'), tf_keras.__version__; \
 from transformers import TFBertForMaskedLM"
-
-# Install nltk data
-RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share/nltk_data/')"
 
 # Install R and dependencies for tidyverse library
 RUN apt-get update -qq && apt-get install -y \

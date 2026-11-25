@@ -138,10 +138,19 @@ echo -n "null" > "$CHECK50_OUT"
 if [ -n "$SLUG" ]; then
     echo "Cloning checks at $SLUG..."
     cd ..
-    python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True)" "$SLUG" "$TOKEN"
+    CHECKS_DIR="$(python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); print(lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True))" "$SLUG" "$TOKEN")"
     cd $REPO
 
-    echo "Running check50..."
+    # Checks that import TensorFlow run on the Python 3.14 runtime that has it installed
+    # (see Dockerfile); everything else runs on cs50/cli's python3. Prepending the runtime's
+    # bin to PATH switches check50 itself, python3, and whatever the checks spawn.
+    RUNTIME_BIN="$(check50-runtime "$CHECKS_DIR")"
+    if [ -n "$RUNTIME_BIN" ]; then
+        echo "Checks at $CHECKS_DIR import TensorFlow, using the runtime at $RUNTIME_BIN..."
+        export PATH="$RUNTIME_BIN:$PATH"
+    fi
+
+    echo "Running check50 ($(command -v check50), $(python3 --version))..."
     sandbox "check50 --local --no-download-checks --log-level=debug --output=json --output-file='$CHECK50_OUT' '$SLUG'" || true
 else
     echo "slug is empty, skipping check50..."
