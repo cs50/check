@@ -1,6 +1,6 @@
 #!/bin/bash
 # Smoke-tests a built cs50/check image before it is pushed. Usage: tests/smoke.sh [IMAGE]
-# Run from the repository root (it mounts dependencies/python/requirements.txt).
+# Run from the repository root (it mounts dependencies/python/).
 #
 # The Dockerfile only proves that apt-get and pip3 exited 0. Everything a check50 job
 # needs at runtime is exercised here, so that a rebuild whose only change is upstream
@@ -10,12 +10,30 @@
 set -o errexit -o nounset -o pipefail
 
 IMAGE="${1:-cs50/check}"
-run() { timeout 300 docker run --rm --entrypoint "" "$@"; }
+TF_PREFIX="/opt/tensorflow"
+TF="$TF_PREFIX/bin"
+run() { timeout 300 docker run --rm --entrypoint "" --env TF_PREFIX="$TF_PREFIX" --env TF="$TF" "$@"; }
 
-# Two Python runtimes (see Dockerfile): cs50/cli's python3 is the default for check50 jobs,
-# and /opt/tensorflow is our own CPython 3.14 build that also has the TensorFlow stack,
-# which check50-runtime selects for jobs whose checks import it.
-TF="/opt/tensorflow/bin"
+# Assertions shared by both runtimes: the non-TensorFlow stack imports and does real work
+STACK_CHECK=$(cat <<'EOF'
+import importlib
+
+for name in ["numpy", "pandas", "sklearn", "cv2", "nltk", "cffi", "PIL", "plotly", "flask", "check50", "lib50"]:
+    importlib.import_module(name)
+
+import numpy as np
+import nltk
+import cv2
+from sklearn.neighbors import KNeighborsClassifier
+
+print("cv2", cv2.__version__, "| numpy", np.__version__)
+assert nltk.sent_tokenize("Hello there. General Kenobi.") == ["Hello there.", "General Kenobi."]
+assert cv2.resize(np.zeros((8, 8, 3), dtype="uint8"), (4, 4)).shape == (4, 4, 3)
+x = np.random.rand(64, 4).astype("float32")
+y = (x.sum(axis=1) > 2).astype("int32")
+assert KNeighborsClassifier(n_neighbors=1).fit(x, y).predict(x[:1]).shape == (1,)
+EOF
+)
 
 echo "Checking $IMAGE"
 
@@ -24,12 +42,11 @@ run "$IMAGE" bash -c '
     . /etc/os-release && test "$VERSION_ID" = 26.04 || { echo "unexpected Ubuntu $VERSION_ID" >&2; exit 1; }
     echo "  default runtime: $(command -v python3) is $(python3 --version)"
     python3 -c "import sys; assert sys.version_info >= (3, 14), sys.version" || exit 1
-    echo "  TensorFlow runtime: '"$TF"'/python3 is $('"$TF"'/python3 --version)"
-    '"$TF"'/python3 --version | grep -q "^Python 3\.14\." || { echo "unexpected $('"$TF"'/python3 --version)" >&2; exit 1; }
-    # Built from source with cs50/cli'"'"'s flags into its own prefix, not Ubuntu'"'"'s python3.14 package
-    '"$TF"'/python3 -c "import sys, sysconfig; assert sys.prefix == \"/opt/tensorflow\", sys.prefix; a = sysconfig.get_config_var(\"CONFIG_ARGS\"); missing = [f for f in (\"--enable-optimizations\", \"--enable-shared\", \"--with-lto\") if f not in a]; sys.exit(f\"CONFIG_ARGS lacks {missing}: {a}\" if missing else 0)" || exit 1
-    ldd '"$TF"'/python3 | grep -q "libpython3.14.so.1.0 => /opt/tensorflow/lib/" || { echo "TensorFlow runtime does not resolve libpython from its prefix:"; ldd '"$TF"'/python3; exit 1; } >&2
-    '"$TF"'/python3 -c "import bz2, ctypes, curses, decimal, lzma, readline, sqlite3, ssl, zlib" || exit 1
+    echo "  TensorFlow runtime: $TF/python3 is $($TF/python3 --version)"
+    $TF/python3 --version | grep -q "^Python 3\.14\." || { echo "unexpected $($TF/python3 --version)" >&2; exit 1; }
+    $TF/python3 -c "import sys, sysconfig; assert sys.prefix == \"$TF_PREFIX\", sys.prefix; a = sysconfig.get_config_var(\"CONFIG_ARGS\"); missing = [f for f in (\"--enable-optimizations\", \"--enable-shared\", \"--with-lto\") if f not in a]; sys.exit(f\"CONFIG_ARGS lacks {missing}: {a}\" if missing else 0)" || exit 1
+    ldd $TF/python3 | grep -q "libpython3.14.so.1.0 => $TF_PREFIX/lib/" || { echo "TensorFlow runtime does not resolve libpython from its prefix:"; ldd $TF/python3; exit 1; } >&2
+    $TF/python3 -c "import bz2, ctypes, curses, decimal, lzma, readline, sqlite3, ssl, zlib" || exit 1
     test "$(id -un)" = ubuntu || { echo "expected to run as ubuntu, got $(id -un)" >&2; exit 1; }
 '
 
@@ -38,15 +55,12 @@ run --volume "$PWD/dependencies/python:/tmp/deps:ro" "$IMAGE" bash -c '
     grep -v "^git+" /tmp/deps/requirements.txt > /tmp/pins.txt
     grep -v "^git+" /tmp/deps/requirements-tensorflow.txt > /tmp/pins-tensorflow.txt
     pip3 install --quiet --no-index --dry-run --requirement /tmp/pins.txt || { echo "default runtime does not satisfy requirements.txt" >&2; exit 1; }
-    '"$TF"'/pip install --quiet --no-index --dry-run --requirement /tmp/pins.txt --requirement /tmp/pins-tensorflow.txt || { echo "TensorFlow runtime does not satisfy requirements.txt + requirements-tensorflow.txt" >&2; exit 1; }
+    $TF/pip install --quiet --no-index --dry-run --requirement /tmp/pins.txt --requirement /tmp/pins-tensorflow.txt || { echo "TensorFlow runtime does not satisfy requirements.txt + requirements-tensorflow.txt" >&2; exit 1; }
 '
 
 echo "- the default runtime imports the Python stack and does real work, and has no TensorFlow (so cs50/cli need not wait for it)"
-run --interactive "$IMAGE" python3 - <<'EOF'
-import importlib
-
-for name in ["numpy", "pandas", "sklearn", "cv2", "nltk", "cffi", "PIL", "plotly", "flask", "check50", "lib50"]:
-    importlib.import_module(name)
+run --interactive "$IMAGE" python3 - <<EOF
+$STACK_CHECK
 
 for name in ["tensorflow", "tf_keras", "keras", "transformers"]:
     try:
@@ -55,33 +69,13 @@ for name in ["tensorflow", "tf_keras", "keras", "transformers"]:
         pass
     else:
         raise SystemExit(f"{name} is importable on the default runtime; it belongs only to the TensorFlow runtime")
-
-import numpy as np
-print("cv2", __import__("cv2").__version__, "| numpy", np.__version__)
-
-# nltk data baked into the image is found without a download
-import nltk
-assert nltk.sent_tokenize("Hello there. General Kenobi.") == ["Hello there.", "General Kenobi."]
-
-# cv2 and sklearn do real work against the pinned numpy
-import cv2
-assert cv2.resize(np.zeros((8, 8, 3), dtype="uint8"), (4, 4)).shape == (4, 4, 3)
-x = np.random.rand(64, 4).astype("float32")
-y = (x.sum(axis=1) > 2).astype("int32")
-from sklearn.neighbors import KNeighborsClassifier
-assert KNeighborsClassifier(n_neighbors=1).fit(x, y).predict(x[:1]).shape == (1,)
 print("OK")
 EOF
 
 echo "- the TensorFlow runtime imports the same stack plus TensorFlow, tf.keras is Keras 3 in a job that imports tensorflow, and models train"
-run --interactive "$IMAGE" "$TF/python3" - <<'EOF'
-import importlib, sys
+run --interactive "$IMAGE" "$TF/python3" - <<EOF
+$STACK_CHECK
 
-assert sys.version_info[:2] == (3, 14), sys.version
-for name in ["numpy", "pandas", "sklearn", "cv2", "nltk", "cffi", "PIL", "plotly", "flask", "check50", "lib50"]:
-    importlib.import_module(name)
-
-import numpy as np
 import tensorflow as tf
 import tf_keras
 import keras
@@ -89,17 +83,14 @@ import keras
 print("tensorflow", tf.__version__)
 tf_keras_version = getattr(tf.keras, "__version__", None)  # tf_keras's tf.keras has no __version__
 print("tf.keras", tf_keras_version, "| keras", keras.__version__, "| tf_keras", tf_keras.__version__)
-print("cv2", __import__("cv2").__version__, "| numpy", np.__version__)
 
 # tf.keras must be Keras 3: this image has shipped Keras 3 to graders since tf-nightly
 # replaced stable tensorflow, and TF_USE_LEGACY_KERAS is deliberately not set.
-assert tf_keras_version and tf_keras_version.startswith("3."), \
+assert tf_keras_version and tf_keras_version.startswith("3."), \\
     f"tf.keras resolved to {tf.keras.Sequential.__module__} ({tf_keras_version}); expected Keras 3"
 assert tf_keras.__version__.startswith("2."), f"tf_keras is {tf_keras.__version__}, expected Keras 2"
 
 # tf.keras trains and evaluates a model end to end (the path a CS50 AI check exercises)
-x = np.random.rand(64, 4).astype("float32")
-y = (x.sum(axis=1) > 2).astype("int32")
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(4,)),
     tf.keras.layers.Dense(8, activation="relu"),
@@ -108,16 +99,6 @@ model = tf.keras.Sequential([
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 model.fit(x, y, epochs=1, verbose=0)
 model.evaluate(x, y, verbose=0)
-
-# nltk data baked into the image is shared with this runtime too
-import nltk
-assert nltk.sent_tokenize("Hello there. General Kenobi.") == ["Hello there.", "General Kenobi."]
-
-# cv2 and sklearn do real work against the pinned numpy (traffic.py uses both)
-import cv2
-assert cv2.resize(np.zeros((8, 8, 3), dtype="uint8"), (4, 4)).shape == (4, 4, 3)
-from sklearn.neighbors import KNeighborsClassifier
-assert KNeighborsClassifier(n_neighbors=1).fit(x, y).predict(x[:1]).shape == (1,)
 print("OK")
 EOF
 
@@ -140,18 +121,22 @@ EOF
 echo "- check50-runtime routes checks that import TensorFlow to the TensorFlow runtime, and nothing else"
 run "$IMAGE" bash -c '
     set -o errexit
-    mkdir -p /tmp/checks/{traffic,attention,multi,shopping,comment}
+    mkdir -p /tmp/checks/{traffic,attention,multi,shopping,comment,broken}
     printf "import numpy as np\nimport tensorflow as tf\nimport check50\n" > /tmp/checks/traffic/__init__.py
     printf "from transformers.tokenization_utils_base import BatchEncoding\n" > /tmp/checks/attention/__init__.py
     printf "import check50\ndef f():\n    import numpy, tensorflow as tf\n" > /tmp/checks/multi/__init__.py
     printf "import numpy, pandas\nimport check50\n" > /tmp/checks/shopping/__init__.py
     printf "# tensorflow is not used here\nx = \"import tensorflow\"\nimport check50\n" > /tmp/checks/comment/__init__.py
+    printf "def (\n" > /tmp/checks/broken/__init__.py
     for d in traffic attention multi; do
-        test "$(check50-runtime /tmp/checks/$d)" = "'"$TF"'" || { echo "$d should run on the TensorFlow runtime" >&2; exit 1; }
+        test "$(check50-runtime /tmp/checks/$d)" = "$TF" || { echo "$d should run on the TensorFlow runtime" >&2; exit 1; }
     done
     for d in shopping comment; do
         test -z "$(check50-runtime /tmp/checks/$d)" || { echo "$d should run on the default runtime" >&2; exit 1; }
     done
+    # A check that cannot be parsed is left to check50 to report, so the job still runs
+    out="$(check50-runtime /tmp/checks/broken)" || { echo "check50-runtime failed on an unparsable check (exit $?)" >&2; exit 1; }
+    test -z "$out" || { echo "broken should run on the default runtime" >&2; exit 1; }
 '
 
 echo "- check50 on the TensorFlow runtime grades a submission whose checks import tensorflow and load student code in-process"
@@ -200,7 +185,7 @@ def get_model():
 PY
     # The same PATH switch docker-entry.sh makes for a job check50-runtime routes here
     export PATH="$(check50-runtime /tmp/checks/traffic):$PATH"
-    test "$(command -v check50)" = "'"$TF"'/check50" || { echo "check50 did not resolve to the TensorFlow runtime: $(command -v check50)" >&2; exit 1; }
+    test "$(command -v check50)" = "$TF/check50" || { echo "check50 did not resolve to the TensorFlow runtime: $(command -v check50)" >&2; exit 1; }
     cd /tmp/submission
     PYTHON_COLORS=0 check50 --dev --output=json --output-file=/tmp/result.json /tmp/checks/traffic || true
     jq -e "(.results | length) == 3 and all(.results[]; .passed == true)" /tmp/result.json > /dev/null \

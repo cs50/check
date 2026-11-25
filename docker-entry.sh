@@ -141,9 +141,6 @@ if [ -n "$SLUG" ]; then
     CHECKS_DIR="$(python3 -c "import lib50, os, sys; lib50.set_local_path(os.getenv('CHECK50_PATH')); print(lib50.local(sys.argv[1], github_token=sys.argv[2], remove_origin=True))" "$SLUG" "$TOKEN")"
     cd $REPO
 
-    # Checks that import TensorFlow run on the Python 3.14 runtime that has it installed
-    # (see Dockerfile); everything else runs on cs50/cli's python3. Prepending the runtime's
-    # bin to PATH switches check50 itself, python3, and whatever the checks spawn.
     RUNTIME_BIN="$(check50-runtime "$CHECKS_DIR")"
     if [ -n "$RUNTIME_BIN" ]; then
         echo "Checks at $CHECKS_DIR import TensorFlow, using the runtime at $RUNTIME_BIN..."
