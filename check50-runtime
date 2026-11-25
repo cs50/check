@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""Print the bin directory of the Python runtime check50 should run on for a set of checks,
+or nothing if the checks do not import the TensorFlow stack."""
+
+import ast
+import os
+import sys
+from pathlib import Path
+
+USAGE = "Usage: check50-runtime CHECKS_DIR"
+
+TENSORFLOW_PACKAGES = {"tensorflow", "tf_keras", "keras", "transformers"}
+
+
+def imports(path):
+    try:
+        tree = ast.parse(path.read_bytes(), filename=str(path))
+    except (SyntaxError, ValueError):
+        return
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                yield alias.name.partition(".")[0]
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            yield node.module.partition(".")[0]
+
+
+def needs_tensorflow(checks_dir):
+    return any(
+        name in TENSORFLOW_PACKAGES
+        for path in Path(checks_dir).rglob("*.py")
+        for name in imports(path)
+    )
+
+
+def main():
+    if len(sys.argv) != 2:
+        print(USAGE, file=sys.stderr)
+        sys.exit(2)
+    if needs_tensorflow(sys.argv[1]):
+        print(os.path.join(os.environ.get("TENSORFLOW_RUNTIME", "/opt/tensorflow"), "bin"))
+
+
+if __name__ == "__main__":
+    main()
