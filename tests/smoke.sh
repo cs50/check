@@ -13,19 +13,23 @@ IMAGE="${1:-cs50/check}"
 run() { timeout 300 docker run --rm --entrypoint "" "$@"; }
 
 # Two Python runtimes (see Dockerfile): cs50/cli's python3 is the default for check50 jobs,
-# and /opt/tensorflow is a Python 3.14 venv that also has the TensorFlow stack, which
-# check50-runtime selects for jobs whose checks import it.
+# and /opt/tensorflow is our own CPython 3.14 build that also has the TensorFlow stack,
+# which check50-runtime selects for jobs whose checks import it.
 TF="/opt/tensorflow/bin"
 
 echo "Checking $IMAGE"
 
-echo "- base image is Ubuntu 26.04, the TensorFlow runtime is Python 3.14, and jobs run as ubuntu"
+echo "- base image is Ubuntu 26.04, the TensorFlow runtime is our Python 3.14 build, and jobs run as ubuntu"
 run "$IMAGE" bash -c '
     . /etc/os-release && test "$VERSION_ID" = 26.04 || { echo "unexpected Ubuntu $VERSION_ID" >&2; exit 1; }
     echo "  default runtime: $(command -v python3) is $(python3 --version)"
     python3 -c "import sys; assert sys.version_info >= (3, 14), sys.version" || exit 1
     echo "  TensorFlow runtime: '"$TF"'/python3 is $('"$TF"'/python3 --version)"
     '"$TF"'/python3 --version | grep -q "^Python 3\.14\." || { echo "unexpected $('"$TF"'/python3 --version)" >&2; exit 1; }
+    # Built from source with cs50/cli'"'"'s flags into its own prefix, not Ubuntu'"'"'s python3.14 package
+    '"$TF"'/python3 -c "import sys, sysconfig; assert sys.prefix == \"/opt/tensorflow\", sys.prefix; a = sysconfig.get_config_var(\"CONFIG_ARGS\"); missing = [f for f in (\"--enable-optimizations\", \"--enable-shared\", \"--with-lto\") if f not in a]; sys.exit(f\"CONFIG_ARGS lacks {missing}: {a}\" if missing else 0)" || exit 1
+    ldd '"$TF"'/python3 | grep -q "libpython3.14.so.1.0 => /opt/tensorflow/lib/" || { echo "TensorFlow runtime does not resolve libpython from its prefix:"; ldd '"$TF"'/python3; exit 1; } >&2
+    '"$TF"'/python3 -c "import bz2, ctypes, curses, decimal, lzma, readline, sqlite3, ssl, zlib" || exit 1
     test "$(id -un)" = ubuntu || { echo "expected to run as ubuntu, got $(id -un)" >&2; exit 1; }
 '
 

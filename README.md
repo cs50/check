@@ -8,9 +8,10 @@ The image has two Python runtimes, and `docker-entry.sh` picks one per job:
 
 - **cs50/cli's `python3`** (`/usr/local/bin/python3`) is the default. It gets
   `dependencies/python/requirements.txt`.
-- **`/opt/tensorflow`** is a venv on Ubuntu 26.04's `python3.14` that gets the same
-  `requirements.txt` plus `dependencies/python/requirements-tensorflow.txt`. A job
-  runs on it when `check50-runtime` finds that its checks import `tensorflow`,
+- **`/opt/tensorflow`** is a CPython 3.14 built from source with cs50/cli's configure
+  flags, so TensorFlow checks grade on the same interpreter students had on 3.14. It
+  gets the same `requirements.txt` plus `dependencies/python/requirements-tensorflow.txt`.
+  A job runs on it when `check50-runtime` finds that its checks import `tensorflow`,
   `tf_keras`, `keras`, or `transformers` (e.g. `ai50/projects/traffic` and `attention`,
   which import TensorFlow in the check module and load student code in-process).
 

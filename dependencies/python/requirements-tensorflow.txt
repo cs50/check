@@ -1,5 +1,5 @@
 # The TensorFlow stack. Installed only into the Python 3.14 runtime at /opt/tensorflow
-# (Ubuntu 26.04's python3.14, see Dockerfile), together with requirements.txt. check50
+# (built from source, see Dockerfile), together with requirements.txt. check50
 # jobs whose checks import any of these packages run on that runtime (check50-runtime);
 # every other job runs on cs50/cli's python3, which is therefore free to move past 3.14
 # before TensorFlow does (cs50/cli#254).

@@ -30,15 +30,39 @@ RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/share
 #
 # The TensorFlow stack lags new Python releases by about a year (cp314 wheels arrived
 # eleven months after 3.14.0), and cs50/cli's python3 should not have to wait for it
-# (cs50/cli#254). So TensorFlow is installed into a venv on Ubuntu 26.04's own python3.14,
-# which stays 3.14 (with security updates) for the life of the release, and check50-runtime
-# routes a job onto it when its checks import the stack. Each runtime gets the same
-# requirements.txt, so a check behaves the same on either; only the TensorFlow packages
-# differ. Replace this runtime with cs50/cli's python3 once the stack supports it.
+# (cs50/cli#254). So TensorFlow is installed into its own CPython 3.14 at /opt/tensorflow,
+# and check50-runtime routes a job onto it when its checks import the stack. Each runtime
+# gets the same requirements.txt, so a check behaves the same on either; only the
+# TensorFlow packages differ. Replace this runtime with cs50/cli's python3 once the stack
+# supports it.
+#
+# Built from source with cs50/cli's configure flags, so these checks grade on the same
+# interpreter students had on 3.14. (Ubuntu 26.04's python3.14 package stays at 3.14.4
+# for the life of the release, with security fixes only.) The rpath keeps libpython
+# resolving from the prefix without an ld.so.conf entry.
 ENV TENSORFLOW_RUNTIME=/opt/tensorflow
+RUN apt-get update -qq && apt-get install -y \
+    libbz2-dev \
+    libffi-dev \
+    liblzma-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    zlib1g-dev
 COPY dependencies/python/requirements-tensorflow.txt /tmp/requirements-tensorflow.txt
-RUN apt-get update -qq && apt-get install -y python3.14 python3.14-venv && \
-    /usr/bin/python3.14 -m venv "$TENSORFLOW_RUNTIME" && \
+RUN cd /tmp && \
+    curl --remote-name https://www.python.org/ftp/python/3.14.10/Python-3.14.10.tgz && \
+    tar xzf Python-3.14.10.tgz && \
+    rm --force Python-3.14.10.tgz && \
+    cd Python-3.14.10 && \
+    CFLAGS="-Os" LDFLAGS="-Wl,-rpath,${TENSORFLOW_RUNTIME}/lib" ./configure --prefix="$TENSORFLOW_RUNTIME" --disable-static --enable-optimizations --enable-shared --with-lto --without-tests && \
+    make -j "$(nproc)" && \
+    make install && \
+    cd .. && \
+    rm --force --recursive Python-3.14.10 && \
+    ln --relative --symbolic "$TENSORFLOW_RUNTIME/bin/pip3" "$TENSORFLOW_RUNTIME/bin/pip" && \
+    ln --relative --symbolic "$TENSORFLOW_RUNTIME/bin/python3" "$TENSORFLOW_RUNTIME/bin/python" && \
     "$TENSORFLOW_RUNTIME/bin/pip" install --no-cache-dir --upgrade "pip>=26.2.2" `# GHSA-6q48-6c7w-9gw2` && \
     "$TENSORFLOW_RUNTIME/bin/pip" install --no-cache-dir -r /tmp/requirements.txt -r /tmp/requirements-tensorflow.txt && \
     rm /tmp/requirements.txt /tmp/requirements-tensorflow.txt
