@@ -139,8 +139,11 @@ run "$IMAGE" bash -c '
     test -z "$out" || { echo "broken should run on the default runtime" >&2; exit 1; }
 '
 
-echo "- check50 on the TensorFlow runtime grades a submission whose checks import tensorflow and load student code in-process"
-run --interactive "$IMAGE" bash -c '
+echo "- check50 on the TensorFlow runtime grades a submission whose checks import tensorflow and load student code in-process, within a job's 1 GiB and 1.2 CPUs"
+# The cluster runs each job with these limits (submit.cs50.io's Job spec). check50 starts a worker per CPU the
+# node reports, and each worker imports TensorFlow, so without docker-entry.sh's CHECK50_WORKERS=1 the pod is
+# OOM-killed and the student never gets a result. Run under the same limits so that regressing it fails here.
+run --interactive --memory 1g --memory-swap 1g --cpus 1.2 "$IMAGE" bash -c '
     set -o errexit
     mkdir -p /tmp/checks/traffic /tmp/submission
     cat > /tmp/checks/traffic/.cs50.yml <<YML
@@ -170,7 +173,10 @@ def get_model_is_model():
 @check50.check(exists)
 def python3_is_tensorflow_runtime():
     """python3 spawned by a check is the TensorFlow runtime"""
-    check50.run("python3 -c \"import sys, tensorflow; print(sys.version_info[:2])\"").stdout("(3, 14)").exit(0)
+    # Prove the interpreter (prefix + version) without importing TensorFlow a second time: the parent
+    # and the worker already hold it, and a third copy would not fit the 1 GiB a job gets. Real checks
+    # do not spawn TensorFlow subprocesses either; they load student code in-process.
+    check50.run("python3 -c \"import sys, importlib.util; print(sys.prefix, sys.version_info[:2], importlib.util.find_spec(str(sys.argv[1])) is not None)\" tensorflow").stdout("/opt/tensorflow (3, 14) True\n", regex=False).exit(0)
 PY
     cat > /tmp/submission/traffic.py <<PY
 import cv2
@@ -183,8 +189,9 @@ def get_model():
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     return model
 PY
-    # The same PATH switch docker-entry.sh makes for a job check50-runtime routes here
+    # The same PATH switch and worker count docker-entry.sh sets for a job check50-runtime routes here
     export PATH="$(check50-runtime /tmp/checks/traffic):$PATH"
+    export CHECK50_WORKERS=1
     test "$(command -v check50)" = "$TF/check50" || { echo "check50 did not resolve to the TensorFlow runtime: $(command -v check50)" >&2; exit 1; }
     cd /tmp/submission
     PYTHON_COLORS=0 check50 --dev --output=json --output-file=/tmp/result.json /tmp/checks/traffic || true

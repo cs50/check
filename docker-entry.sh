@@ -145,6 +145,12 @@ if [ -n "$SLUG" ]; then
     if [ -n "$RUNTIME_BIN" ]; then
         echo "Checks at $CHECKS_DIR import TensorFlow, using the runtime at $RUNTIME_BIN..."
         export PATH="$RUNTIME_BIN:$PATH"
+        # One check at a time. check50 otherwise runs one worker per CPU the node reports (2), and
+        # each worker imports TensorFlow and transformers, which with the parent is more than the
+        # job's 1 GiB: the pod is OOM-killed, the Job retries until its deadline, and the student
+        # waits for a result that never comes. One worker peaks around 760 MiB; the pod has 1.2
+        # CPUs, so parallelism was not buying anything anyway.
+        export CHECK50_WORKERS=1
     fi
 
     echo "Running check50 ($(command -v check50), $(python3 --version))..."
