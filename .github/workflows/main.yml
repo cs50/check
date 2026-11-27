@@ -8,12 +8,12 @@ on:
 #   any other branch:  cs50/check:<sha>, cs50/check:canary                    (built FROM cs50/cli:canary)
 # Nothing is pushed unless the built image passes tests/smoke.sh.
 #
-# TEMPORARY: main builds on cs50/cli:python-3.15 (cs50/cli#256) rather than cs50/cli:latest, to
-# trial Python 3.15 in production grading ahead of cs50/cli's move (cs50/cli#254). Set
-# MAIN_BASE_TAG back to latest to revert, or once cs50/cli#256 has merged.
+# MAIN_BASE_TAG is normally latest. Point it at a cs50/cli branch tag (e.g. python-3.15, see
+# cs50/cli#256) to build production on that branch's image ahead of its merge, as was done to
+# trial Python 3.15 in production grading before cs50/cli moved.
 
 env:
-  MAIN_BASE_TAG: python-3.15
+  MAIN_BASE_TAG: latest
 
 jobs:
   build-and-push:
